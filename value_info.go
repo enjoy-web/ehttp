@@ -264,3 +264,26 @@ func (v ValueInfo) toSwaggerHeader() (*swagger.Header, error) {
 		Enum:        enum,
 	}, nil
 }
+
+func (v ValueInfo) getBitSize() int {
+	switch v.Type {
+	case "int":
+		return 32
+	case "int32":
+		return 32
+	case "int64":
+		return 64
+	case "uint":
+		return 32
+	case "uint32":
+		return 32
+	case "uint64":
+		return 64
+	case "float32":
+		return 32
+	case "float64":
+		return 64
+	default:
+		return 0
+	}
+}
