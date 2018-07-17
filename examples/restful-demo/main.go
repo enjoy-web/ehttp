@@ -1,12 +1,11 @@
-package rest
+package main
 
 import (
-	"fmt"
-	"testing"
-
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 
+	rest "github.com/YMhao/gin-rest"
 	"github.com/gin-gonic/gin"
 )
 
@@ -63,17 +62,6 @@ type Book struct {
 	HasReview bool          `json:"has_review"`
 }
 
-var confForTest = &Config{
-	Schemes:            []Scheme{SchemeHTTP, SchemeHTTPS},
-	Host:               "127.0.0.1:8000",
-	BasePath:           "/dev",
-	Version:            "v1",
-	Title:              " demo APIS",
-	Description:        "demo APIS\n\n" + newCodeErrorMarkDownDoc(ErrorCodes),
-	AllowOrigin:        true,
-	OpenAPIDocumentURL: true,
-}
-
 func handleGETBook(c *gin.Context, err error) {
 	if err != nil {
 		c.JSON(400, &ErrorMessage{-1, "parameter error", err.Error()})
@@ -116,124 +104,60 @@ func handlePostBook(c *gin.Context, err error) {
 	c.JSON(200, book)
 }
 
-func TestEnginGet(t *testing.T) {
-	router := NewEngine(confForTest)
-	err := router.GET("/books/:id", &GETDoc{
+func main() {
+	conf := &rest.Config{
+		Schemes:            []rest.Scheme{rest.SchemeHTTP, rest.SchemeHTTPS},
+		Host:               ":8000",
+		BasePath:           "/dev",
+		Version:            "v1",
+		Title:              " demo APIS",
+		Description:        "demo APIS\n\n" + newCodeErrorMarkDownDoc(ErrorCodes),
+		AllowOrigin:        true,
+		OpenAPIDocumentURL: true,
+	}
+	router := rest.NewEngine(conf)
+	err := router.GET("/books/:id", &rest.GETDoc{
 		Summary: "Get book info by id",
-		Accept:  []string{Application_Json},
-		Parameters: map[string]Parameter{
-			"id": Parameter{InPath: &ValueInfo{Type: "string"}},
+		Accept:  []string{rest.Application_Json},
+		Parameters: map[string]rest.Parameter{
+			"id": rest.Parameter{InPath: &rest.ValueInfo{Type: "string"}},
 		},
-		Responses: map[int]Response{
-			200: Response{
+		Responses: map[int]rest.Response{
+			200: rest.Response{
 				Description: "successful operation",
 				Model:       &Book{},
 			},
-			400: Response{
+			400: rest.Response{
 				Description: "failed operation",
 				Model:       &ErrorMessage{},
 			},
 		},
 	}, handleGETBook)
 	if err != nil {
-		RestTestError(t, err)
+		panic(err)
 	}
 
-	swaggerDoc, err := router.GetSwaggerJSONDocument()
-	if err != nil {
-		RestTestError(t, err)
-	} else {
-		RestTestLog(t, swaggerDoc)
-	}
-}
-
-func TestEnginPost(t *testing.T) {
-	router := NewEngine(confForTest)
-	// new a book
-	err := router.POST("/books", &CommonDoc{
+	err = router.POST("/books", &rest.CommonDoc{
 		Summary:     "new a book",
-		Accept:      []string{Application_Json},
-		ContentType: []string{Application_Json},
-		Request: &Request{
+		Accept:      []string{rest.Application_Json},
+		ContentType: []string{rest.Application_Json},
+		Request: &rest.Request{
 			Description: "the book info",
 			Model:       &Book{},
 		},
-		Responses: map[int]Response{
-			200: Response{
+		Responses: map[int]rest.Response{
+			200: rest.Response{
 				Description: "successful operation",
 				Model:       &Book{},
 			},
-			400: Response{
+			400: rest.Response{
 				Description: "failed operation",
 				Model:       &ErrorMessage{},
 			},
 		},
 	}, handlePostBook)
 	if err != nil {
-		RestTestError(t, err)
+		panic(err)
 	}
-
-	swaggerDoc, err := router.GetSwaggerJSONDocument()
-	if err != nil {
-		RestTestError(t, err)
-	} else {
-		RestTestLog(t, swaggerDoc)
-	}
-}
-
-func handleFunc(c *gin.Context, err error) {
-}
-
-func TestInvalidDoc(t *testing.T) {
-	missParamterInDoc(t)
-	missHandlerFunc(t)
-}
-
-func missParamterInDoc(t *testing.T) {
-	router := NewEngine(confForTest)
-	err := router.GET("/books/:id", &GETDoc{
-		Summary: "Get book info by id",
-		Accept:  []string{Application_Json},
-		Responses: map[int]Response{
-			200: Response{
-				Description: "successful operation",
-				Model:       &Book{},
-			},
-			400: Response{
-				Description: "failed operation",
-				Model:       &ErrorMessage{},
-			},
-		},
-	}, handleFunc)
-	if err != nil {
-		RestTestLog(t, err)
-	} else {
-		RestTestError(t, "err should not be nil")
-	}
-}
-
-func missHandlerFunc(t *testing.T) {
-	router := NewEngine(confForTest)
-	err := router.GET("/books/:id", &GETDoc{
-		Summary: "Get book info by id",
-		Accept:  []string{Application_Json},
-		Parameters: map[string]Parameter{
-			"id": Parameter{InPath: &ValueInfo{Type: "string"}},
-		},
-		Responses: map[int]Response{
-			200: Response{
-				Description: "successful operation",
-				Model:       &Book{},
-			},
-			400: Response{
-				Description: "failed operation",
-				Model:       &ErrorMessage{},
-			},
-		},
-	}, nil)
-	if err != nil {
-		RestTestLog(t, err)
-	} else {
-		RestTestError(t, "err should not be nil")
-	}
+	router.Run()
 }

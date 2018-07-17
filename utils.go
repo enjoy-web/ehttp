@@ -162,3 +162,81 @@ func getDefinitionsFromStructDocMap(docMap map[string]*StructDoc) map[string]*sw
 	}
 	return definitions
 }
+
+func ginPathToSwaggerPath(path string) (string, error) {
+	b := bytes.Buffer{}
+	flag := false
+	for i := 0; i < len(path); i++ {
+		if path[i] == '*' {
+			return "", errors.New("path " + path + " is not supported")
+		} else if path[i] == ':' {
+			b.WriteByte('{')
+			flag = true
+		} else if path[i] == '/' && flag == true {
+			b.WriteByte('}')
+			b.WriteByte('/')
+			flag = false
+		} else {
+			b.WriteByte(path[i])
+		}
+	}
+	if flag == true {
+		b.WriteByte('}')
+	}
+	return b.String(), nil
+}
+
+func swaggerPathToGinPath(path string) (string, error) {
+	b := bytes.Buffer{}
+	flag := false
+	for i := 0; i < len(path); i++ {
+		if path[i] == '*' {
+			return "", errors.New("path " + path + " is not supported")
+		} else if path[i] == '{' {
+			b.WriteByte(':')
+			flag = true
+		} else if path[i] == '}' && flag == true {
+			flag = false
+		} else {
+			b.WriteByte(path[i])
+		}
+	}
+	return b.String(), nil
+}
+
+func getSwaggerTagFormPath(path string) string {
+	b := bytes.Buffer{}
+	for i := 0; i < len(path); i++ {
+		if i == 0 {
+			if path[0] != '/' {
+				return b.String()
+			}
+		} else {
+			if path[i] == '/' || path[i] == ':' || path[i] == '{' {
+				return b.String()
+			}
+			b.WriteByte(path[i])
+		}
+	}
+	return b.String()
+}
+
+func getHeadersFormAPIDoc(doc APIDoc) []string {
+	headers := []string{
+		"Access-Control-Allow-Origin",
+		"Access-Control-Allow-Method",
+		"Authorization",
+		"Location",
+		"Accept",
+		"Content-Type",
+		"Origin"}
+	if doc != nil {
+		parameters := doc.GetParameters()
+		for name, param := range parameters {
+			if param.InHeader != nil {
+				headers = append(headers, name)
+			}
+		}
+	}
+	return headers
+}

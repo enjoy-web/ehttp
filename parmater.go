@@ -53,6 +53,7 @@ func (p Parameter) check() error {
 func (p Parameter) toSwaggerParameters(name string) ([]*swagger.Parameter, error) {
 	parameters := []*swagger.Parameter{}
 	if p.InPath != nil {
+		p.InPath.Required = true
 		param, err := newSwaggerParameter(name, InPath, p.InPath)
 		if err != nil {
 			return nil, err

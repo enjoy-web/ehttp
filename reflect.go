@@ -89,9 +89,9 @@ func isValueTypeNumber(valueType string) bool {
 
 // StructDoc document of a struct
 // Fields:
-//    UUID -- UUID(Universally Unique Identifier) of the struct, UUID = GoPkgPath + StructNamethe. (like: github.com/YMhao/go-easy-restful/spec/StructDoc)
+//    UUID -- UUID(Universally Unique Identifier) of the struct, UUID = GoPkgPath + StructNamethe. (like: github.com/YMhao/gin-rest.StructDoc)
 //    StructName -- the name of struct. (like: StructDoc)
-//    GoPkgPath -- the package path of the struct. (like: github.com/YMhao/go-easy-restful/spec/StructDoc)
+//    GoPkgPath -- the package path of the struct. (like: github.com/YMhao/gin-rest.StructDoc)
 //    StructFields -- StructFields in the struct.
 type StructDoc struct {
 	UUID         string
@@ -104,7 +104,7 @@ type StructDoc struct {
 // Fields:
 //   IsArray -- Whether the field type is an array
 //   IsStruct -- Whether the field is a struct(like: Filed StructField, Fields []StructField, FiledPtr *StructField , Fields []*StructField)
-//   RefStructUUID -- if the field is a struct, RefStructUUID is the StructUUID(like: github.com/YMhao/go-easy-restful/spec/StructField)
+//   RefStructUUID -- if the field is a struct, RefStructUUID is the StructUUID(like: github.com/YMhao/gin-rest/StructField)
 //   ValueType -- type of the value
 //   Name -- the filed name. If not be set the tag(like: FieldName string), the filed name is FieldName,
 //           else(like: FieldName string `json:"fieldName" xml:"fieldName"`) the filed name is the value(fieldName) from the tag.
@@ -263,7 +263,7 @@ func getGoPkgPath(t reflect.Type) (string, error) {
 }
 
 func getStructUUIDFromPkgPathAndName(goPkgPath, structName string) string {
-	return goPkgPath + "#" + structName
+	return goPkgPath + "." + structName
 }
 
 // The argument to getStructUUID must be equal to reflect.Struct.
@@ -308,10 +308,14 @@ func getStructField(field reflect.StructField) (*StructField, error) {
 	if len(enum) == 0 {
 		enum = nil
 	}
+	fieldName, err := getStructFieldName(field)
+	if err != nil {
+		return nil, err
+	}
 	structField := &StructField{
 		IsArray:     checkStructFieldTypeIsSlice(field),
 		IsStruct:    checkStructFieldTypeIsStruct(field),
-		Name:        field.Name,
+		Name:        fieldName,
 		Description: getStructFieldDescription(field),
 		Enum:        enum,
 		Min:         getStructFieldMinimum(field),
