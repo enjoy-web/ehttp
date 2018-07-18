@@ -14,7 +14,7 @@ type APIDoc interface {
 	GetParameters() map[string]Parameter
 }
 
-// GETDoc method GET API document info
+// APIDocMethodGET method GET API document info
 // Fields:
 //   Tags -- A list of tags for API documentation control. Tags can be used for logical grouping of operations by resources or any other qualifier.
 //   Summary -- Summary of this api
@@ -26,7 +26,7 @@ type APIDoc interface {
 //                 The list can use the Reference Object to link to parameters that are defined at the Swagger Object's parameters.
 //                 There can be one "body" parameter at most.
 //   Responses -- An object to hold responses that can be used across operations
-type GETDoc struct {
+type APIDocMethodGET struct {
 	Tags        []string
 	Summary     string
 	Description string
@@ -36,7 +36,7 @@ type GETDoc struct {
 }
 
 // ToSwaggerOperation to swagger.Operation document
-func (doc GETDoc) ToSwaggerOperation() (*swagger.Operation, error) {
+func (doc APIDocMethodGET) ToSwaggerOperation() (*swagger.Operation, error) {
 	if err := doc.check(); err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (doc GETDoc) ToSwaggerOperation() (*swagger.Operation, error) {
 }
 
 // ToSwaggerDefinitions to map[string]*swagger.Schema (swagger Definitions)
-func (doc GETDoc) ToSwaggerDefinitions() (map[string]*swagger.Schema, error) {
+func (doc APIDocMethodGET) ToSwaggerDefinitions() (map[string]*swagger.Schema, error) {
 	creater := StructDocCreater{}
 	structDocs := map[string]*StructDoc{}
 	for _, response := range doc.Responses {
@@ -94,15 +94,15 @@ func (doc GETDoc) ToSwaggerDefinitions() (map[string]*swagger.Schema, error) {
 }
 
 // GetParameters Get Parameters
-func (doc GETDoc) GetParameters() map[string]Parameter {
+func (doc APIDocMethodGET) GetParameters() map[string]Parameter {
 	return doc.Parameters
 }
 
-func (doc GETDoc) check() error {
+func (doc APIDocMethodGET) check() error {
 	return doc.checkParameters()
 }
 
-func (doc GETDoc) checkParameters() error {
+func (doc APIDocMethodGET) checkParameters() error {
 	for name, parma := range doc.Parameters {
 		if parma.InFormData != nil {
 			err := errors.New("In method GET, param.InFormData should be nil")
@@ -112,7 +112,7 @@ func (doc GETDoc) checkParameters() error {
 	return nil
 }
 
-// CommonDoc methods (POST,PUT,PATCH,DELETE,...) API document info
+// APIDocCommon methods (POST,PUT,PATCH,DELETE,...) API document info
 // Fields:
 //   Tags -- A list of tags for API documentation control. Tags can be used for logical grouping of operations by resources or any other qualifier.
 //   Summary -- Summary of this api
@@ -126,7 +126,7 @@ func (doc GETDoc) checkParameters() error {
 //   Request -- the request in http body.
 //   ContentType -- Content-type in http header, such as "Content-type: application/json"
 //   Responses -- An object to hold responses that can be used across operations
-type CommonDoc struct {
+type APIDocCommon struct {
 	Tags        []string
 	Summary     string
 	Description string
@@ -138,7 +138,7 @@ type CommonDoc struct {
 }
 
 // ToSwaggerOperation to swagger.Operation document
-func (doc CommonDoc) ToSwaggerOperation() (*swagger.Operation, error) {
+func (doc APIDocCommon) ToSwaggerOperation() (*swagger.Operation, error) {
 	if err := doc.check(); err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (doc CommonDoc) ToSwaggerOperation() (*swagger.Operation, error) {
 }
 
 // ToSwaggerDefinitions to map[string]*swagger.Schema (swagger Definitions)
-func (doc CommonDoc) ToSwaggerDefinitions() (map[string]*swagger.Schema, error) {
+func (doc APIDocCommon) ToSwaggerDefinitions() (map[string]*swagger.Schema, error) {
 	creater := StructDocCreater{}
 	structDocs := map[string]*StructDoc{}
 	for _, response := range doc.Responses {
@@ -209,11 +209,11 @@ func (doc CommonDoc) ToSwaggerDefinitions() (map[string]*swagger.Schema, error) 
 }
 
 // GetParameters Get Parameters
-func (doc CommonDoc) GetParameters() map[string]Parameter {
+func (doc APIDocCommon) GetParameters() map[string]Parameter {
 	return doc.Parameters
 }
 
-func (doc CommonDoc) check() error {
+func (doc APIDocCommon) check() error {
 	if doc.hasformData() {
 		if doc.Request != nil {
 			return errors.New("There are parameters in formData, doc.Request should be nil")
@@ -227,7 +227,7 @@ func (doc CommonDoc) check() error {
 	return nil
 }
 
-func (doc CommonDoc) hasformData() bool {
+func (doc APIDocCommon) hasformData() bool {
 	for _, param := range doc.Parameters {
 		if param.InFormData != nil {
 			return true

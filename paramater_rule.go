@@ -8,20 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ParameterRule the rule of the parameter, check if parameter is valid
-type ParameterRule interface {
+// parameterRule the rule of the parameter, check if parameter is valid
+type parameterRule interface {
 	Check(*gin.Context) error
 }
 
-// ParameterRuleBase the base class of ParameterRule
-type ParameterRuleBase struct {
+// parameterRuleBase the base class of parameterRule
+type parameterRuleBase struct {
 	Name     string
 	In       string
 	Required bool
 }
 
 // GetValue get parameter value from the http request
-func (p ParameterRuleBase) GetValue(c *gin.Context) (string, error) {
+func (p parameterRuleBase) GetValue(c *gin.Context) (string, error) {
 	var value string
 	switch p.In {
 	case "header":
@@ -43,9 +43,9 @@ func (p ParameterRuleBase) GetValue(c *gin.Context) (string, error) {
 	return value, nil
 }
 
-// ParameterRuleInt the rule of the parameter(type is integer), check if parameter is valid
-type ParameterRuleInt struct {
-	ParameterRuleBase
+// parameterRuleInt the rule of the parameter(type is integer), check if parameter is valid
+type parameterRuleInt struct {
+	parameterRuleBase
 	BitSize int
 	Enum    map[int64]bool
 	HasMin  bool
@@ -55,7 +55,7 @@ type ParameterRuleInt struct {
 }
 
 // Check if parameter is valid
-func (p ParameterRuleInt) Check(c *gin.Context) error {
+func (p parameterRuleInt) Check(c *gin.Context) error {
 	value, err := p.GetValue(c)
 	if err != nil {
 		return err
@@ -85,9 +85,9 @@ func (p ParameterRuleInt) Check(c *gin.Context) error {
 	return nil
 }
 
-// ParameterRuleUint the rule of the parameter(type is unsigned integer), check if parameter is valid
-type ParameterRuleUint struct {
-	ParameterRuleBase
+// parameterRuleUint the rule of the parameter(type is unsigned integer), check if parameter is valid
+type parameterRuleUint struct {
+	parameterRuleBase
 	BitSize int
 	Enum    map[uint64]bool
 	HasMin  bool
@@ -97,7 +97,7 @@ type ParameterRuleUint struct {
 }
 
 // Check if parameter is valid
-func (p ParameterRuleUint) Check(c *gin.Context) error {
+func (p parameterRuleUint) Check(c *gin.Context) error {
 	value, err := p.GetValue(c)
 	if err != nil {
 		return err
@@ -127,9 +127,9 @@ func (p ParameterRuleUint) Check(c *gin.Context) error {
 	return nil
 }
 
-// ParameterRuleFloat the rule of the parameter(type is float), check if parameter is valid
-type ParameterRuleFloat struct {
-	ParameterRuleBase
+// parameterRuleFloat the rule of the parameter(type is float), check if parameter is valid
+type parameterRuleFloat struct {
+	parameterRuleBase
 	BitSize int
 	HasMin  bool
 	Min     float64
@@ -138,7 +138,7 @@ type ParameterRuleFloat struct {
 }
 
 // Check if parameter is valid
-func (p ParameterRuleFloat) Check(c *gin.Context) error {
+func (p parameterRuleFloat) Check(c *gin.Context) error {
 	value, err := p.GetValue(c)
 	if err != nil {
 		return err
@@ -163,14 +163,14 @@ func (p ParameterRuleFloat) Check(c *gin.Context) error {
 	return nil
 }
 
-// ParameterRuleString the rule of the parameter(type is string), check if parameter is valid
-type ParameterRuleString struct {
-	ParameterRuleBase
+// parameterRuleString the rule of the parameter(type is string), check if parameter is valid
+type parameterRuleString struct {
+	parameterRuleBase
 	Enum map[string]bool
 }
 
 // Check if parameter is valid
-func (p ParameterRuleString) Check(c *gin.Context) error {
+func (p parameterRuleString) Check(c *gin.Context) error {
 	value, err := p.GetValue(c)
 	if err != nil {
 		return err
@@ -186,13 +186,13 @@ func (p ParameterRuleString) Check(c *gin.Context) error {
 	return nil
 }
 
-// ParameterRuleBool the rule of the parameter(type is bool), check if parameter is valid
-type ParameterRuleBool struct {
-	ParameterRuleBase
+// parameterRuleBool the rule of the parameter(type is bool), check if parameter is valid
+type parameterRuleBool struct {
+	parameterRuleBase
 }
 
 // Check if parameter is valid
-func (p ParameterRuleBool) Check(c *gin.Context) error {
+func (p parameterRuleBool) Check(c *gin.Context) error {
 	value, err := p.GetValue(c)
 	if err != nil {
 		return err
@@ -204,8 +204,8 @@ func (p ParameterRuleBool) Check(c *gin.Context) error {
 	return err
 }
 
-func getParameterRules(params map[string]Parameter) ([]ParameterRule, error) {
-	rules := []ParameterRule{}
+func getParameterRules(params map[string]Parameter) ([]parameterRule, error) {
+	rules := []parameterRule{}
 	for name, param := range params {
 		if err := param.check(); err != nil {
 			return nil, err
@@ -219,8 +219,8 @@ func getParameterRules(params map[string]Parameter) ([]ParameterRule, error) {
 	return rules, nil
 }
 
-func toParameterRules(name string, param *Parameter) ([]ParameterRule, error) {
-	rules := []ParameterRule{}
+func toParameterRules(name string, param *Parameter) ([]parameterRule, error) {
+	rules := []parameterRule{}
 	if hasParameterRule(param.InPath) {
 		rule, err := newParameterRule(name, InPath, param.InPath)
 		if err != nil {
@@ -274,7 +274,7 @@ func hasParameterRule(valueInfo *ValueInfo) bool {
 	return false
 }
 
-func newParameterRule(name string, in string, valueInfo *ValueInfo) (ParameterRule, error) {
+func newParameterRule(name string, in string, valueInfo *ValueInfo) (parameterRule, error) {
 	if valueInfo.isString() {
 		return newParameterRuleString(name, in, valueInfo)
 	}
@@ -293,8 +293,8 @@ func newParameterRule(name string, in string, valueInfo *ValueInfo) (ParameterRu
 	return nil, errors.New("invalid valueInfo")
 }
 
-func newParameterRuleString(name string, in string, valueInfo *ValueInfo) (ParameterRule, error) {
-	rule := &ParameterRuleString{ParameterRuleBase: ParameterRuleBase{
+func newParameterRuleString(name string, in string, valueInfo *ValueInfo) (parameterRule, error) {
+	rule := &parameterRuleString{parameterRuleBase: parameterRuleBase{
 		Name:     name,
 		In:       in,
 		Required: valueInfo.Required,
@@ -312,16 +312,16 @@ func newParameterRuleString(name string, in string, valueInfo *ValueInfo) (Param
 	return rule, nil
 }
 
-func newParameterRuleBool(name string, in string, valueInfo *ValueInfo) (ParameterRule, error) {
-	return &ParameterRuleBool{ParameterRuleBase: ParameterRuleBase{
+func newParameterRuleBool(name string, in string, valueInfo *ValueInfo) (parameterRule, error) {
+	return &parameterRuleBool{parameterRuleBase: parameterRuleBase{
 		Name:     name,
 		In:       in,
 		Required: valueInfo.Required,
 	}}, nil
 }
 
-func newParameterRuleInt(name string, in string, valueInfo *ValueInfo) (ParameterRule, error) {
-	rule := &ParameterRuleInt{ParameterRuleBase: ParameterRuleBase{
+func newParameterRuleInt(name string, in string, valueInfo *ValueInfo) (parameterRule, error) {
+	rule := &parameterRuleInt{parameterRuleBase: parameterRuleBase{
 		Name:     name,
 		In:       in,
 		Required: valueInfo.Required,
@@ -357,8 +357,8 @@ func newParameterRuleInt(name string, in string, valueInfo *ValueInfo) (Paramete
 	return rule, nil
 }
 
-func newParameterRuleUint(name string, in string, valueInfo *ValueInfo) (ParameterRule, error) {
-	rule := &ParameterRuleUint{ParameterRuleBase: ParameterRuleBase{
+func newParameterRuleUint(name string, in string, valueInfo *ValueInfo) (parameterRule, error) {
+	rule := &parameterRuleUint{parameterRuleBase: parameterRuleBase{
 		Name:     name,
 		In:       in,
 		Required: valueInfo.Required,
@@ -394,8 +394,8 @@ func newParameterRuleUint(name string, in string, valueInfo *ValueInfo) (Paramet
 	return rule, nil
 }
 
-func newParameterRuleFloat(name string, in string, valueInfo *ValueInfo) (ParameterRule, error) {
-	rule := &ParameterRuleFloat{ParameterRuleBase: ParameterRuleBase{
+func newParameterRuleFloat(name string, in string, valueInfo *ValueInfo) (parameterRule, error) {
+	rule := &parameterRuleFloat{parameterRuleBase: parameterRuleBase{
 		Name:     name,
 		In:       in,
 		Required: valueInfo.Required,

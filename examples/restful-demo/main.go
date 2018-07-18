@@ -62,7 +62,26 @@ type Book struct {
 	HasReview bool          `json:"has_review"`
 }
 
-func handleGETBook(c *gin.Context, err error) {
+var DocGETBook = &rest.APIDocMethodGET{
+	Summary: "Get book info by id",
+	Accept:  []string{rest.Application_Json},
+	Parameters: map[string]rest.Parameter{
+		"id":      rest.Parameter{InPath: &rest.ValueInfo{Type: "string"}},
+		"version": rest.Parameter{InHeader: &rest.ValueInfo{Type: "string", Desc: "the version of api"}},
+	},
+	Responses: map[int]rest.Response{
+		200: rest.Response{
+			Description: "successful operation",
+			Model:       &Book{},
+		},
+		400: rest.Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+func HandleGETBook(c *gin.Context, err error) {
 	if err != nil {
 		c.JSON(400, &ErrorMessage{-1, "parameter error", err.Error()})
 		return
@@ -85,7 +104,30 @@ func handleGETBook(c *gin.Context, err error) {
 	c.JSON(200, book)
 }
 
-func handlePostBook(c *gin.Context, err error) {
+var DocPostBook = &rest.APIDocCommon{
+	Summary:     "new a book",
+	Accept:      []string{rest.Application_Json},
+	ContentType: []string{rest.Application_Json},
+	Parameters: map[string]rest.Parameter{
+		"version": rest.Parameter{InHeader: &rest.ValueInfo{Type: "string", Desc: "the version of api"}},
+	},
+	Request: &rest.Request{
+		Description: "the book info",
+		Model:       &Book{},
+	},
+	Responses: map[int]rest.Response{
+		200: rest.Response{
+			Description: "successful operation",
+			Model:       &Book{},
+		},
+		400: rest.Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+func HandlePostBook(c *gin.Context, err error) {
 	if err != nil {
 		c.JSON(400, newErrorMessage(ErrorCodeParameter, err))
 		return
@@ -116,46 +158,11 @@ func main() {
 		OpenAPIDocumentURL: true,
 	}
 	router := rest.NewEngine(conf)
-	err := router.GET("/books/:id", &rest.GETDoc{
-		Summary: "Get book info by id",
-		Accept:  []string{rest.Application_Json},
-		Parameters: map[string]rest.Parameter{
-			"id": rest.Parameter{InPath: &rest.ValueInfo{Type: "string"}},
-		},
-		Responses: map[int]rest.Response{
-			200: rest.Response{
-				Description: "successful operation",
-				Model:       &Book{},
-			},
-			400: rest.Response{
-				Description: "failed operation",
-				Model:       &ErrorMessage{},
-			},
-		},
-	}, handleGETBook)
+	err := router.GET("/books/:id", DocGETBook, HandleGETBook)
 	if err != nil {
 		panic(err)
 	}
-
-	err = router.POST("/books", &rest.CommonDoc{
-		Summary:     "new a book",
-		Accept:      []string{rest.Application_Json},
-		ContentType: []string{rest.Application_Json},
-		Request: &rest.Request{
-			Description: "the book info",
-			Model:       &Book{},
-		},
-		Responses: map[int]rest.Response{
-			200: rest.Response{
-				Description: "successful operation",
-				Model:       &Book{},
-			},
-			400: rest.Response{
-				Description: "failed operation",
-				Model:       &ErrorMessage{},
-			},
-		},
-	}, handlePostBook)
+	err = router.POST("/books", DocPostBook, HandlePostBook)
 	if err != nil {
 		panic(err)
 	}

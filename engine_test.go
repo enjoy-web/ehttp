@@ -74,7 +74,26 @@ var confForTest = &Config{
 	OpenAPIDocumentURL: true,
 }
 
-func handleGETBook(c *gin.Context, err error) {
+var DocGETBook = &APIDocMethodGET{
+	Summary: "Get book info by id",
+	Accept:  []string{Application_Json},
+	Parameters: map[string]Parameter{
+		"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
+		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
+	},
+	Responses: map[int]Response{
+		200: Response{
+			Description: "successful operation",
+			Model:       &Book{},
+		},
+		400: Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+func HandleGETBook(c *gin.Context, err error) {
 	if err != nil {
 		c.JSON(400, &ErrorMessage{-1, "parameter error", err.Error()})
 		return
@@ -97,7 +116,30 @@ func handleGETBook(c *gin.Context, err error) {
 	c.JSON(200, book)
 }
 
-func handlePostBook(c *gin.Context, err error) {
+var DocPostBook = &APIDocCommon{
+	Summary:     "new a book",
+	Accept:      []string{Application_Json},
+	ContentType: []string{Application_Json},
+	Parameters: map[string]Parameter{
+		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
+	},
+	Request: &Request{
+		Description: "the book info",
+		Model:       &Book{},
+	},
+	Responses: map[int]Response{
+		200: Response{
+			Description: "successful operation",
+			Model:       &Book{},
+		},
+		400: Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+func HandlePostBook(c *gin.Context, err error) {
 	if err != nil {
 		c.JSON(400, newErrorMessage(ErrorCodeParameter, err))
 		return
@@ -118,23 +160,7 @@ func handlePostBook(c *gin.Context, err error) {
 
 func TestEnginGet(t *testing.T) {
 	router := NewEngine(confForTest)
-	err := router.GET("/books/:id", &GETDoc{
-		Summary: "Get book info by id",
-		Accept:  []string{Application_Json},
-		Parameters: map[string]Parameter{
-			"id": Parameter{InPath: &ValueInfo{Type: "string"}},
-		},
-		Responses: map[int]Response{
-			200: Response{
-				Description: "successful operation",
-				Model:       &Book{},
-			},
-			400: Response{
-				Description: "failed operation",
-				Model:       &ErrorMessage{},
-			},
-		},
-	}, handleGETBook)
+	err := router.GET("/books/:id", DocGETBook, HandleGETBook)
 	if err != nil {
 		RestTestError(t, err)
 	}
@@ -150,25 +176,7 @@ func TestEnginGet(t *testing.T) {
 func TestEnginPost(t *testing.T) {
 	router := NewEngine(confForTest)
 	// new a book
-	err := router.POST("/books", &CommonDoc{
-		Summary:     "new a book",
-		Accept:      []string{Application_Json},
-		ContentType: []string{Application_Json},
-		Request: &Request{
-			Description: "the book info",
-			Model:       &Book{},
-		},
-		Responses: map[int]Response{
-			200: Response{
-				Description: "successful operation",
-				Model:       &Book{},
-			},
-			400: Response{
-				Description: "failed operation",
-				Model:       &ErrorMessage{},
-			},
-		},
-	}, handlePostBook)
+	err := router.POST("/books", DocPostBook, HandlePostBook)
 	if err != nil {
 		RestTestError(t, err)
 	}
@@ -191,7 +199,7 @@ func TestInvalidDoc(t *testing.T) {
 
 func missParamterInDoc(t *testing.T) {
 	router := NewEngine(confForTest)
-	err := router.GET("/books/:id", &GETDoc{
+	err := router.GET("/books/:id", &APIDocMethodGET{
 		Summary: "Get book info by id",
 		Accept:  []string{Application_Json},
 		Responses: map[int]Response{
@@ -214,11 +222,12 @@ func missParamterInDoc(t *testing.T) {
 
 func missHandlerFunc(t *testing.T) {
 	router := NewEngine(confForTest)
-	err := router.GET("/books/:id", &GETDoc{
+	err := router.GET("/books/:id", &APIDocMethodGET{
 		Summary: "Get book info by id",
 		Accept:  []string{Application_Json},
 		Parameters: map[string]Parameter{
-			"id": Parameter{InPath: &ValueInfo{Type: "string"}},
+			"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
+			"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
 		},
 		Responses: map[int]Response{
 			200: Response{
