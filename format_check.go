@@ -52,7 +52,7 @@ func checkEnumFormat(enumStr string, valueType string) error {
 				return err
 			}
 		default:
-			return errors.New(valueType + " can't set enumeration")
+			return errors.New(valueType + " can't set Enum")
 		}
 	}
 	return nil
@@ -77,7 +77,7 @@ func compareMinimumAndMaximum(min, max string, valueType string) error {
 			return err
 		}
 		if _max <= _min {
-			return errors.New("the maximum(" + max + ")  must be greater than the minimum(" + min + ")")
+			return errors.New("the maximum(" + max + ") must be greater than the minimum(" + min + ")")
 		}
 		return nil
 	}
@@ -92,7 +92,7 @@ func compareMinimumAndMaximum(min, max string, valueType string) error {
 			return err
 		}
 		if _max <= _min {
-			return errors.New("the maximum(" + max + ")  must be greater than the minimum(" + min + ")")
+			return errors.New("the maximum(" + max + ") must be greater than the minimum(" + min + ")")
 		}
 		return nil
 	}
@@ -115,15 +115,12 @@ func compareMinimumAndMaximum(min, max string, valueType string) error {
 	case "float64":
 		return compareFloat(min, max, 64)
 	default:
-		return errors.New("the paramter value type is " + valueType + ", can't set limit num (minimum and maximum)")
+		return errors.New("the paramter value type is " + valueType + ", can't set Min and Min")
 	}
 
 }
 
 func checkLimitNumFormat(numStr, valueType string) error {
-	if numStr == "" {
-		return nil
-	}
 	switch valueType {
 	case "int":
 		_, err := strconv.ParseInt(numStr, 10, 32)
@@ -150,6 +147,6 @@ func checkLimitNumFormat(numStr, valueType string) error {
 		_, err := strconv.ParseFloat(numStr, 64)
 		return err
 	default:
-		return errors.New("the paramter value type is " + valueType + ", can't set limit num (minimum and maximum)")
+		return errors.New("the paramter value type is " + valueType + ", can't set Min and Min")
 	}
 }

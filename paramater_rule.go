@@ -275,6 +275,9 @@ func hasParameterRule(valueInfo *ValueInfo) bool {
 }
 
 func newParameterRule(name string, in string, valueInfo *ValueInfo) (parameterRule, error) {
+	if err := valueInfo.check(); err != nil {
+		return nil, err
+	}
 	if valueInfo.isString() {
 		return newParameterRuleString(name, in, valueInfo)
 	}

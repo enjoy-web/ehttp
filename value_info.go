@@ -94,26 +94,26 @@ func (v ValueInfo) checkValuetype() error {
 
 func (v ValueInfo) checkEnum() error {
 	if v.Min != "" {
-		return errors.New("num exists, cant't set minimum")
+		return errors.New("Enum exists, cant't set Min")
 	}
 	if v.Max != "" {
-		return errors.New("num exists, cant't set maximum")
+		return errors.New("Enum exists, cant't set Max")
 	}
 	return checkEnumFormat(v.Enum, v.Type)
 }
 
 func (v ValueInfo) checkMinimum() error {
 	if !v.isNumber() {
-		return errors.New("the paramter value type is " + v.Type + ", can't set limit num (minimum and maximum)")
+		return errors.New("the paramter value type is " + v.Type + ",  can't set Min and Min")
 	}
 	return checkMinimumFormat(v.Min, v.Type)
 }
 
 func (v ValueInfo) checkMaximum() error {
 	if !v.isNumber() {
-		return errors.New("the paramter value type is " + v.Type + ", can't set limit num (minimum and maximum)")
+		return errors.New("the paramter value type is " + v.Type + ",  can't set Min and Min")
 	}
-	return checkMaximumFormat(v.Min, v.Type)
+	return checkMaximumFormat(v.Max, v.Type)
 }
 
 func (v ValueInfo) isNumber() bool {
