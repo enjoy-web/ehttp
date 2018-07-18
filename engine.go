@@ -158,19 +158,8 @@ func (e *Engine) setSwaggerPath(relativePath string, method string, doc APIDoc) 
 	e.setSwaggerOperation(relativePath, method, operation)
 
 	// check paramter in relativePath
-	parameterNames := getParametersFromPath(relativePath)
-	for _, paramName := range parameterNames {
-		err = func(parameterNames []string) error {
-			for _, param := range operation.Parameters {
-				if param.In == InPath && param.Name == paramName {
-					return nil
-				}
-			}
-			return errors.New("miss doc-parameter-InPath " + paramName)
-		}(parameterNames)
-		if err != nil {
-			return &engineError{relativePath, method, err}
-		}
+	if err := checkParametersInPath(relativePath, operation.Parameters); err != nil {
+		return err
 	}
 
 	// set swagger Definitions

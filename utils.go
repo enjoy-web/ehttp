@@ -3,6 +3,7 @@ package rest
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"reflect"
 	"runtime"
 
@@ -33,13 +34,33 @@ func getRefFromObject(obj interface{}) (string, error) {
 	return _definitions + structName, nil
 }
 
+func checkParametersInPath(path string, swaggerParameters []*swagger.Parameter) error {
+	inPathParametersFromPath := getInPathParametersFromPath(path)
+	inPathParametersFormSwaggerParams := getInPathParameterFromSwaggerParameters(swaggerParameters)
+	for parameterName := range inPathParametersFromPath {
+		if _, ok := inPathParametersFormSwaggerParams[parameterName]; ok {
+			delete(inPathParametersFromPath, parameterName)
+			delete(inPathParametersFormSwaggerParams, parameterName)
+		}
+	}
+	if len(inPathParametersFromPath) != 0 {
+		params := _mapToArray(inPathParametersFromPath)
+		return fmt.Errorf("miss parameters %v in APIDoc", params)
+	}
+	if len(inPathParametersFormSwaggerParams) != 0 {
+		params := _mapToArray(inPathParametersFormSwaggerParams)
+		return fmt.Errorf("miss parameters %v in url-path", params)
+	}
+	return nil
+}
+
 // getParametersFromPath
 // examples:
-//    path = "/basePath/{version}/zoos/{id}", return []string{"version","id"}
-//    path = "/basePath/:version/zoos/:id", return []string{"version","id"}
-//    path = "/basePath/zoos/:id", return []string{"id"}
-func getParametersFromPath(path string) []string {
-	params := []string{}
+//    path = "/basePath/{version}/zoos/{id}", return map[string]bool{"version": true, "id": true}
+//    path = "/basePath/:version/zoos/:id", return map[string]bool{"version": true, "id": true}
+//    path = "/basePath/zoos/:id", return map[string]bool{"id": true}
+func getInPathParametersFromPath(path string) map[string]bool {
+	params := map[string]bool{}
 	b := bytes.Buffer{}
 	flag := false
 	for i := 0; i < len(path); i++ {
@@ -51,7 +72,7 @@ func getParametersFromPath(path string) []string {
 			if path[i] == '}' || path[i] == '/' {
 				str := b.String()
 				if len(str) != 0 {
-					params = append(params, str)
+					params[str] = true
 				}
 				b = bytes.Buffer{}
 				flag = false
@@ -62,7 +83,17 @@ func getParametersFromPath(path string) []string {
 	}
 	str := b.String()
 	if len(str) != 0 {
-		params = append(params, str)
+		params[str] = true
+	}
+	return params
+}
+
+func getInPathParameterFromSwaggerParameters(swaggerParameters []*swagger.Parameter) map[string]bool {
+	params := map[string]bool{}
+	for _, param := range swaggerParameters {
+		if param.In == InPath {
+			params[param.Name] = true
+		}
 	}
 	return params
 }
@@ -90,7 +121,7 @@ func newSwaggerParameter(name, in string, valueInfo *ValueInfo) (*swagger.Parame
 	}
 	return &swagger.Parameter{
 		Name:        name,
-		In:          InPath,
+		In:          in,
 		Description: valueInfo.Desc,
 		Required:    valueInfo.Required,
 		Type:        dataType.typeName,
@@ -217,4 +248,12 @@ func getHeadersFormAPIDoc(doc APIDoc) []string {
 		}
 	}
 	return headers
+}
+
+func _mapToArray(m map[string]bool) []string {
+	_m := []string{}
+	for k := range m {
+		_m = append(_m, k)
+	}
+	return _m
 }

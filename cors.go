@@ -162,14 +162,6 @@ func (a *accessControlAllow) toDeduplicatedString(m map[string]bool) string {
 	return newStr
 }
 
-func _mapToArray(m map[string]bool) []string {
-	_m := []string{}
-	for k := range m {
-		_m = append(_m, k)
-	}
-	return _m
-}
-
 func (a *accessControlAllow) setMethods(methods map[string]bool) {
 	a.Methods = a.toDeduplicatedString(methods)
 }
