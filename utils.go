@@ -33,28 +33,6 @@ func getRefFromObject(obj interface{}) (string, error) {
 	return _definitions + structName, nil
 }
 
-func getEnumFromStringArray(array []string) []interface{} {
-	enum := []interface{}{}
-	for _, v := range array {
-		enum = append(enum, v)
-	}
-	return enum
-}
-
-// getParametersFromPath
-// examples:
-//    path = "/basePath/{version}/zoos/{id}", return map[string]bool{"version": true, "id": true}
-//    path = "/basePath/:version/zoos/:id", return map[string]bool{"version": true, "id": true}
-//    path = "/basePath/zoos/:id", return m := map[string]bool{"version": true}
-func getParametersMapFromPath(path string) map[string]bool {
-	m := map[string]bool{}
-	params := getParametersFromPath(path)
-	for _, param := range params {
-		m[param] = true
-	}
-	return m
-}
-
 // getParametersFromPath
 // examples:
 //    path = "/basePath/{version}/zoos/{id}", return []string{"version","id"}
