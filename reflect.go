@@ -53,6 +53,7 @@ var dataTypes = map[string]dataType{
 	"float64": dataType{"number", "float"},
 	"string":  dataType{"string", ""},
 	"bool":    dataType{"boolean", ""},
+	"file":    dataType{"file", ""},
 }
 
 func isValueTypeString(valueType string) bool {

@@ -45,7 +45,7 @@ func (p Parameter) check() error {
 		}
 	}
 	if p.InFormData != nil {
-		return p.InQuery.checkWithHTTPIn(InFormData)
+		return p.InFormData.checkWithHTTPIn(InFormData)
 	}
 	return nil
 }

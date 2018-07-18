@@ -236,9 +236,12 @@ func (v ValueInfo) getMaximum() (*float64, error) {
 }
 
 func (v ValueInfo) toSwaggerHeader() (*swagger.Header, error) {
+	if v.Type == "file" {
+		return nil, errors.New("type file is not supported")
+	}
 	dataType, ok := dataTypes[v.Type]
 	if !ok {
-		return nil, errors.New(v.Type + " is not supported")
+		return nil, errors.New("type " + v.Type + " is not supported")
 	}
 	min, err := v.getMinimum()
 	if err != nil {
