@@ -1,12 +1,16 @@
 package rest
 
 import (
+	"bytes"
 	"fmt"
+	"net/http"
 	"testing"
+	"time"
 
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/YMhao/gin-rest/swagger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -158,34 +162,135 @@ func HandlePostBook(c *gin.Context, err error) {
 	c.JSON(200, book)
 }
 
-func TestEnginGet(t *testing.T) {
-	router := NewEngine(confForTest)
-	err := router.GET("/books/:id", DocGETBook, HandleGETBook)
-	if err != nil {
-		RestTestError(t, err)
-	}
+func TestEngin(t *testing.T) {
+	runServer(t)
+	testGet(t)
+	testPost(t)
+	testGetSwaggerJSON(t)
+	testOptions(t)
+}
 
-	swaggerDoc, err := router.GetSwaggerJSONDocument()
+func runServer(t *testing.T) {
+	go func() {
+		router := NewEngine(confForTest)
+		err := router.GET("/books/:id", DocGETBook, HandleGETBook)
+		if err != nil {
+			RestTestError(t, err)
+		}
+		err = router.POST("/books", DocPostBook, HandlePostBook)
+		if err != nil {
+			RestTestError(t, err)
+		}
+		if _, err := router.GetSwaggerJSONDocument(); err != nil {
+			RestTestError(t, err)
+		}
+		if _, err := router.GetSwaggerYAMLDocument(); err != nil {
+			RestTestError(t, err)
+		}
+		router.Run()
+	}()
+	t.Log("waiting 1 second for server startup")
+	time.Sleep(1 * time.Second)
+}
+
+func testGet(t *testing.T) {
+	resp, err := http.Get("http://127.0.0.1:8000:/dev/books/123456")
 	if err != nil {
 		RestTestError(t, err)
-	} else {
-		RestTestLog(t, swaggerDoc)
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	book := &Book{}
+	if err := json.Unmarshal(body, book); err != nil {
+		RestTestError(t, err)
 	}
 }
 
-func TestEnginPost(t *testing.T) {
-	router := NewEngine(confForTest)
-	// new a book
-	err := router.POST("/books", DocPostBook, HandlePostBook)
+func testPost(t *testing.T) {
+	newBook := &Book{
+		ID:      "01213342",
+		Title:   "Demo book",
+		Summary: "This is a demo book",
+		Authors: []string{"John"},
+		Images: BookImageUrls{
+			Small:  "small-url",
+			Medium: "medium-url",
+			Large:  "large-url",
+		},
+		Pages:     121,
+		Price:     40.50,
+		HasReview: true,
+	}
+	b, err := json.Marshal(newBook)
 	if err != nil {
 		RestTestError(t, err)
 	}
-
-	swaggerDoc, err := router.GetSwaggerJSONDocument()
+	requestBody := bytes.NewBuffer(b)
+	resp, err := http.Post("http://127.0.0.1:8000/dev/books", Application_Json_utf8, requestBody)
 	if err != nil {
 		RestTestError(t, err)
-	} else {
-		RestTestLog(t, swaggerDoc)
+		return
+	}
+	defer resp.Body.Close()
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	switch resp.StatusCode {
+	case 200:
+		book := &Book{}
+		if err := json.Unmarshal(responseBody, book); err != nil {
+			RestTestError(t, err)
+		}
+	case 400:
+		errMessage := &ErrorMessage{}
+		if err := json.Unmarshal(responseBody, errMessage); err != nil {
+			RestTestError(t, err)
+		}
+	default:
+		RestTestError(t, "server error")
+	}
+}
+
+func testGetSwaggerJSON(t *testing.T) {
+	resp, err := http.Get("http://127.0.0.1:8000:/dev/docs/swagger.json")
+	if err != nil {
+		RestTestError(t, err)
+		return
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	switch resp.StatusCode {
+	case 200:
+		doc := &swagger.Swagger{}
+		if err := json.Unmarshal(body, doc); err != nil {
+			RestTestError(t, err)
+		}
+	default:
+		RestTestError(t, "http statusCode should not be", resp.StatusCode)
+	}
+
+}
+
+func testOptions(t *testing.T) {
+	req, err := http.NewRequest(OPTIONS, "http://127.0.0.1:8000:/dev/books/123456", nil)
+	if err != nil {
+		RestTestError(t, err)
+	}
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-us,en;q=0.5")
+	req.Header.Set("Accept-Encoding", "gzip,deflate")
+	req.Header.Set("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")
+	req.Header.Set("Connection", "keep-alive")
+	req.Header.Set("Origin", "http://xxx.example")
+	req.Header.Set("Access-Control-Request-Method", GET)
+	req.Header.Set("Access-Control-Request-Headers", "Content-Type, version")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		RestTestError(t, err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		RestTestError(t, "resp.StatusCode != 200")
 	}
 }
 

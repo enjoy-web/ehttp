@@ -37,6 +37,7 @@ const (
 	Application_Rtf           = "application/rtf"
 	Application_Xml           = "application/xml"
 	Application_Json          = "application/json"
+	Application_Json_utf8     = "application/json;charset=utf-8"
 	Application_Zip           = "application/zip"
 	Application_Siren_Json    = "application/vnd.siren+json"
 	Application_Hal_Json      = "application/hal+json"

@@ -132,6 +132,7 @@ func HandlePostBook(c *gin.Context, err error) {
 		c.JSON(400, newErrorMessage(ErrorCodeParameter, err))
 		return
 	}
+	defer c.Request.Body.Close()
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
 		c.JSON(400, newErrorMessage(ErrorCodeReadBody, err))
