@@ -26,5 +26,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	err = router.GET("/books", api.DocGETBooks, api.HandleGETBooks)
+	if err != nil {
+		panic(err)
+	}
 	router.Run()
 }

@@ -45,10 +45,10 @@ var commonNames = map[string]string{
 var dataTypes = map[string]dataType{
 	"int":     dataType{"integer", "int32"},
 	"int32":   dataType{"integer", "int32"},
-	"int64":   dataType{"long", "int64"},
+	"int64":   dataType{"integer", "int64"},
 	"uint":    dataType{"integer", "int32"},
 	"uint32":  dataType{"integer", "int32"},
-	"uint64":  dataType{"long", "int64"},
+	"uint64":  dataType{"integer", "int64"},
 	"float32": dataType{"number", "float"},
 	"float64": dataType{"number", "float"},
 	"string":  dataType{"string", ""},
