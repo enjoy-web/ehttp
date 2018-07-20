@@ -112,24 +112,24 @@ func TestParameterRuleCheck(t *testing.T) {
 	for index, test := range tests {
 		req, err := http.NewRequest("GET", test.URL, nil)
 		if err != nil {
-			RestTestError(t, "tests[", index, "] error:", err)
+			testError(t, "tests[", index, "] error:", err)
 		}
 		c := &gin.Context{Request: req}
 		rules, err := toParameterRules(test.Name, &test.Parameter)
 		if err != nil {
-			RestTestError(t, "tests[", index, "] error:", err)
+			testError(t, "tests[", index, "] error:", err)
 		}
 		for _, rule := range rules {
 			err := rule.Check(c)
 			if test.WantHasError {
 				if err == nil {
-					RestTestError(t, "tests[", index, "] error:", err, ",WantHasError:", test.WantHasError)
+					testError(t, "tests[", index, "] error:", err, ",WantHasError:", test.WantHasError)
 				} else {
-					RestTestLog(t, "tests[", index, "] error:", err)
+					testLog(t, "tests[", index, "] error:", err)
 				}
 			} else {
 				if err != nil {
-					RestTestError(t, "tests[", index, "] error:", err, ",WantHasError:", test.WantHasError)
+					testError(t, "tests[", index, "] error:", err, ",WantHasError:", test.WantHasError)
 				}
 			}
 		}

@@ -21,10 +21,10 @@ func TestGetStructFieldName(t *testing.T) {
 		field := structType.Field(i)
 		fieldName, err := getStructFieldName(field)
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 		if fieldName != fieldNameList[i] {
-			RestTestError(t, fieldName+" should be equal to "+fieldNameList[i])
+			testError(t, fieldName+" should be equal to "+fieldNameList[i])
 		}
 	}
 }
@@ -78,14 +78,14 @@ func TestGetObjName(t *testing.T) {
 	for index, v := range ValidList {
 		rt, err := getStructReflectType(v.Object)
 		if err != nil {
-			RestTestError(t, index, err)
+			testError(t, index, err)
 		} else {
 			name, err := getStructName(rt)
 			if err != nil {
-				RestTestError(t, index, err)
+				testError(t, index, err)
 			}
 			if v.StructNameToIdentify != name {
-				RestTestError(t, index, "v.StructNameToIdentify should be equal to name")
+				testError(t, index, "v.StructNameToIdentify should be equal to name")
 			}
 		}
 	}
@@ -94,16 +94,16 @@ func TestGetObjName(t *testing.T) {
 	for index, v := range InvalidList {
 		rt, err := getStructReflectType(v.Object)
 		if err == nil {
-			RestTestError(t, index, "err should not be nil")
+			testError(t, index, "err should not be nil")
 			name, err := getStructName(rt)
 			if err != nil {
-				RestTestError(t, index, err)
+				testError(t, index, err)
 			}
 			if v.StructNameToIdentify != name {
-				RestTestError(t, index, "v.StructNameToIdentify should be equal to name")
+				testError(t, index, "v.StructNameToIdentify should be equal to name")
 			}
 		} else {
-			RestTestLog(t, index, err)
+			testLog(t, index, err)
 		}
 	}
 }
@@ -329,13 +329,13 @@ func TestGetStructDoc(t *testing.T) {
 	for index, node := range validList {
 		doc, err := creater.GetStructDoc(node.Object)
 		if err != nil {
-			RestTestError(t, index, doc, err)
+			testError(t, index, doc, err)
 		} else {
 			jsonStr, err := objectToJSONString(doc)
 			if err != nil {
-				RestTestError(t, index, err)
+				testError(t, index, err)
 			} else {
-				RestTestLog(t, index, jsonStr)
+				testLog(t, index, jsonStr)
 			}
 		}
 	}
@@ -344,9 +344,9 @@ func TestGetStructDoc(t *testing.T) {
 	for index, node := range invalidList {
 		_, err := creater.GetStructDoc(node.Object)
 		if err == nil {
-			RestTestError(t, index, "err should not be nil")
+			testError(t, index, "err should not be nil")
 		} else {
-			RestTestLog(t, index, err)
+			testLog(t, index, err)
 		}
 	}
 }
@@ -370,13 +370,13 @@ func TestGetStructDocMap(t *testing.T) {
 	creater := StructDocCreater{}
 	structDocs, err := creater.GetStructDocMap(S4{})
 	if err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	} else {
 		jsonBytes, err := json.MarshalIndent(structDocs, "", "    ")
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		} else {
-			RestTestLog(t, string(jsonBytes))
+			testLog(t, string(jsonBytes))
 		}
 	}
 
@@ -483,16 +483,16 @@ func TestCheckStructFieldsJSONNameAndXMLName(t *testing.T) {
 	for index, node := range validList {
 		err := checkStructFieldsJSONNameAndXMLNameFromObject(node.Object)
 		if err != nil {
-			RestTestError(t, index, err)
+			testError(t, index, err)
 		}
 	}
 	invalidList := InvalidListForCheckStructFieldsJSONNameAndXMLName()
 	for index, node := range invalidList {
 		err := checkStructFieldsJSONNameAndXMLNameFromObject(node.Object)
 		if err == nil {
-			RestTestError(t, index, "err should not be nil")
+			testError(t, index, "err should not be nil")
 		} else {
-			RestTestLog(t, index, err)
+			testLog(t, index, err)
 		}
 	}
 }

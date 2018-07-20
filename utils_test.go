@@ -36,18 +36,18 @@ func TestGinPathToSwaggerPath(t *testing.T) {
 	for i := 0; i < len(ginRoutes); i++ {
 		path, err := ginPathToSwaggerPath(ginRoutes[i])
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		} else {
 			if path != swaggerRoutes[i] {
-				RestTestError(t, path+" != "+swaggerRoutes[i])
+				testError(t, path+" != "+swaggerRoutes[i])
 			}
 		}
 		path, err = swaggerPathToGinPath(swaggerRoutes[i])
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		} else {
 			if path != ginRoutes[i] {
-				RestTestError(t, path+" != "+ginRoutes[i])
+				testError(t, path+" != "+ginRoutes[i])
 			}
 		}
 	}
@@ -59,7 +59,7 @@ func TestGinPathToSwaggerPath(t *testing.T) {
 	for i := 0; i < len(ginRoutesNotSupport); i++ {
 		_, err := ginPathToSwaggerPath(ginRoutesNotSupport[i])
 		if err == nil {
-			RestTestError(t, "the err should not be nil")
+			testError(t, "the err should not be nil")
 		}
 	}
 }
@@ -86,7 +86,7 @@ func TestGetSwaggerTagFormPath(t *testing.T) {
 	for _, test := range tests {
 		tag := getSwaggerTagFormPath(test.Path)
 		if tag != test.Want {
-			RestTestError(t, tag, " != ", test.Want)
+			testError(t, tag, " != ", test.Want)
 		}
 	}
 }

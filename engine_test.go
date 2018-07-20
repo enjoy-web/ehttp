@@ -292,19 +292,19 @@ func TestEngin(t *testing.T) {
 func testEngin(t *testing.T) {
 	runServer(t, conf)
 	if err := testGetBook("http://127.0.0.1:18000:/dev/books/123456"); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 	if err := testGetBooks("http://127.0.0.1:18000:/dev/books?limit=2&offset=10&sort=id&min_price=9.99&max_price=30.99"); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 	if err := testPost("http://127.0.0.1:18000/dev/books"); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 	if err := testGetSwaggerJSON("http://127.0.0.1:18000:/dev/docs/swagger.json"); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 	if err := testOptions(GET, "http://127.0.0.1:18000:/dev/books/123456", "http://xxx.example"); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 
 	// "limit":     Parameter{InQuery: &ValueInfo{Type: "int64", Min: "0", Max: "1000", Required: true, Desc: "the limit of searching"}},
@@ -312,16 +312,16 @@ func testEngin(t *testing.T) {
 	// err: parameter limit -1 < Min (0)
 	getBooksURL := "http://127.0.0.1:18000:/dev/books?limit=-1&offset=10"
 	if err := testGetBooks(getBooksURL); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "testGetBooks("+getBooksURL+") err should not be nil")
+		testError(t, "testGetBooks("+getBooksURL+") err should not be nil")
 	}
 	// err: parameter limit 1001 > Max (1000)
 	getBooksURL = "http://127.0.0.1:18000:/dev/books?limit=1001&offset=10"
 	if err := testGetBooks(getBooksURL); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "testGetBooks("+getBooksURL+") err should not be nil")
+		testError(t, "testGetBooks("+getBooksURL+") err should not be nil")
 	}
 
 	// "sort":      Parameter{InQuery: &ValueInfo{Type: "string", Enum: "id -id price -price", Desc: "sort of searching"}},
@@ -329,9 +329,9 @@ func testEngin(t *testing.T) {
 	// err: paramter sort invalid enum type
 	getBooksURL = "http://127.0.0.1:18000:/dev/books?limit=5&offset=10&sort=title"
 	if err := testGetBooks(getBooksURL); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "testGetBooks("+getBooksURL+") err should not be nil")
+		testError(t, "testGetBooks("+getBooksURL+") err should not be nil")
 	}
 }
 
@@ -340,28 +340,28 @@ func runServer(t *testing.T, conf *Config) {
 		router := NewEngine(conf)
 		err := router.GET("/books/:id", DocGETBook, HandleGETBook)
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 		err = router.GET("/books", DocGETBooks, HandleGETBooks)
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 		err = router.POST("/books", DocPostBook, HandlePostBook)
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 		// I'm lazy
 		err = router.PUT("/books", DocPostBook, HandlePostBook)
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 		err = router.PATCH("/books", DocPostBook, HandlePostBook)
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 		err = router.DELETE("/books/:id", DocDELETEBook, HandleDELETEBook)
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 		router.Run()
 	}()
@@ -383,12 +383,12 @@ func testEnginWithOrigins(t *testing.T) {
 	}
 	runServer(t, conf)
 	if err := testOptions(GET, "http://127.0.0.1:18001:/dev/books/123456", "http://xxx.example"); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 	if err := testOptions(GET, "http://127.0.0.1:18001:/dev/books/123456", "http://YYY.example"); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, `testOptions("http://YYY.example") err should not be nil`)
+		testError(t, `testOptions("http://YYY.example") err should not be nil`)
 	}
 }
 
@@ -405,7 +405,7 @@ func testEnginWithOpenAPIDocumentURL(t *testing.T) {
 	}
 	runServer(t, conf)
 	if err := testGetSwaggerJSON("http://127.0.0.1:18002:/dev/swagger/doc.json"); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 }
 
@@ -566,9 +566,9 @@ func missParamterInDoc(t *testing.T) {
 		},
 	}, handleFunc)
 	if err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "err should not be nil")
+		testError(t, "err should not be nil")
 	}
 }
 
@@ -593,22 +593,22 @@ func missHandlerFunc(t *testing.T) {
 		},
 	}, nil)
 	if err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "err should not be nil")
+		testError(t, "err should not be nil")
 	}
 }
 
 func TestEngine_GetSwaggerJSONDocument(t *testing.T) {
 	router := NewEngine(conf)
 	if _, err := router.GetSwaggerJSONDocument(); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 }
 
 func TestEngine_GetSwaggerYAMLDocument(t *testing.T) {
 	router := NewEngine(conf)
 	if _, err := router.GetSwaggerYAMLDocument(); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 }

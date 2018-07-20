@@ -11,7 +11,7 @@ func TestRequest_toSwaggerParameter(t *testing.T) {
 		Model:       &book{},
 	}
 	if _, err := req.toSwaggerParameter(); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 
 	invalidReq := &Request{
@@ -19,8 +19,8 @@ func TestRequest_toSwaggerParameter(t *testing.T) {
 		Model:       nil,
 	}
 	if _, err := invalidReq.toSwaggerParameter(); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "invalidReq.toSwaggerParameter() err should not be nil")
+		testError(t, "invalidReq.toSwaggerParameter() err should not be nil")
 	}
 }

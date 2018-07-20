@@ -15,7 +15,7 @@ func TestCheckName(t *testing.T) {
 	}
 	for _, name := range NameOk {
 		if err := checkNameFormat(name); err != nil {
-			RestTestError(t, err, name)
+			testError(t, err, name)
 		}
 	}
 	NameNotOk := []string{
@@ -29,9 +29,9 @@ func TestCheckName(t *testing.T) {
 	}
 	for _, name := range NameNotOk {
 		if err := checkNameFormat(name); err == nil {
-			RestTestError(t, "checkNameFormat(", name, ") should not be nil")
+			testError(t, "checkNameFormat(", name, ") should not be nil")
 		} else {
-			RestTestLog(t, err)
+			testLog(t, err)
 		}
 	}
 }
@@ -63,7 +63,7 @@ func TestCheckEnum(t *testing.T) {
 	}
 	for _, enumOk := range EnumOkList {
 		if err := checkEnumFormat(enumOk.EnumStr, enumOk.Type); err != nil {
-			RestTestError(t, err, enumOk.EnumStr, enumOk.Type)
+			testError(t, err, enumOk.EnumStr, enumOk.Type)
 		}
 	}
 
@@ -90,7 +90,7 @@ func TestCheckEnum(t *testing.T) {
 
 	for _, enumNotOk := range EnumNotOkList {
 		if err := checkEnumFormat(enumNotOk.EnumStr, enumNotOk.Type); err == nil {
-			RestTestError(t, "checkEnumFormat("+enumNotOk.EnumStr+", "+enumNotOk.Type+") should not be not")
+			testError(t, "checkEnumFormat("+enumNotOk.EnumStr+", "+enumNotOk.Type+") should not be not")
 		}
 	}
 }
@@ -112,10 +112,10 @@ func TestCheckMinimumAndMinimumFormat(t *testing.T) {
 	}
 	for _, test := range tests {
 		if err := checkMinimumFormat(test.numStr, test.valueType); err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 		if err := checkMaximumFormat(test.numStr, test.valueType); err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 	}
 
@@ -133,10 +133,10 @@ func TestCheckMinimumAndMinimumFormat(t *testing.T) {
 
 	for _, test := range invalidFormatTests {
 		if err := checkMinimumFormat(test.numStr, test.valueType); err == nil {
-			RestTestError(t, "checkMinimumFormat("+test.numStr+", "+test.valueType+") should not be not")
+			testError(t, "checkMinimumFormat("+test.numStr+", "+test.valueType+") should not be not")
 		}
 		if err := checkMaximumFormat(test.numStr, test.valueType); err == nil {
-			RestTestError(t, "checkMinimumFormat("+test.numStr+", "+test.valueType+") should not be not")
+			testError(t, "checkMinimumFormat("+test.numStr+", "+test.valueType+") should not be not")
 		}
 	}
 }
@@ -159,7 +159,7 @@ func TestCompareMinimumAndMaximum(t *testing.T) {
 	}
 	for _, test := range tests {
 		if err := compareMinimumAndMaximum(test.min, test.max, test.valueType); err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 	}
 	// max <= min
@@ -182,7 +182,7 @@ func TestCompareMinimumAndMaximum(t *testing.T) {
 
 	for _, test := range ErrorTests {
 		if err := compareMinimumAndMaximum(test.min, test.max, test.valueType); err == nil {
-			RestTestError(t, "compareMinimumAndMaximum("+test.min+", "+test.max+", "+test.valueType+") should not be not")
+			testError(t, "compareMinimumAndMaximum("+test.min+", "+test.max+", "+test.valueType+") should not be not")
 		}
 	}
 

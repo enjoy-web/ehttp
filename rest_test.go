@@ -6,21 +6,21 @@ import (
 	"testing"
 )
 
-func RestTestLog(t *testing.T, args ...interface{}) {
+func testLog(t *testing.T, args ...interface{}) {
 	_, file, line, ok := runtime.Caller(1)
 	if ok {
-		t.Log("[TestLog] ", fmt.Sprintf("in %s:%d", file, line), args)
+		t.Log("[TEST-log] ", fmt.Sprintf("in %s:%d", file, line), args)
 	} else {
-		t.Log(" [TestLog] ", args)
+		t.Log("[TEST-log]  ", args)
 	}
 
 }
 
-func RestTestError(t *testing.T, args ...interface{}) {
+func testError(t *testing.T, args ...interface{}) {
 	_, file, line, ok := runtime.Caller(1)
 	if ok {
-		t.Error("[TestError] ", fmt.Sprintf("in %s:%d", file, line), args)
+		t.Error("[TEST-error] ", fmt.Sprintf("in %s:%d", file, line), args)
 	} else {
-		t.Error("[TestError] ", args)
+		t.Error("[TEST-error] ", args)
 	}
 }

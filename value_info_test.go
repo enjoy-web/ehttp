@@ -8,13 +8,13 @@ func TestValueInfo_checkWithHTTPIn(t *testing.T) {
 	v := ValueInfo{Type: "file"}
 	err := v.checkWithHTTPIn(InFormData)
 	if err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 	err = v.checkWithHTTPIn(InHeader)
 	if err == nil {
-		RestTestError(t, "v.checkWithHTTPIn(InHeader) should not be nil")
+		testError(t, "v.checkWithHTTPIn(InHeader) should not be nil")
 	} else {
-		RestTestLog(t, err)
+		testLog(t, err)
 	}
 }
 
@@ -71,7 +71,7 @@ func TestValueInfo_check(t *testing.T) {
 	for _, value := range values {
 		err := value.check()
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 	}
 
@@ -148,9 +148,9 @@ func TestValueInfo_check(t *testing.T) {
 	}
 	for _, value := range invalidValues {
 		if err := value.check(); err != nil {
-			RestTestLog(t, err)
+			testLog(t, err)
 		} else {
-			RestTestError(t, "value.check() should not be nil")
+			testError(t, "value.check() should not be nil")
 		}
 	}
 }
@@ -208,7 +208,7 @@ func TestValueInfo_toSwaggerHeader(t *testing.T) {
 	for _, value := range values {
 		_, err := value.toSwaggerHeader()
 		if err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 	}
 
@@ -218,9 +218,9 @@ func TestValueInfo_toSwaggerHeader(t *testing.T) {
 
 	for _, value := range invalidValues {
 		if _, err := value.toSwaggerHeader(); err != nil {
-			RestTestLog(t, err)
+			testLog(t, err)
 		} else {
-			RestTestError(t, "value.toSwaggerHeader() err should not be nil")
+			testError(t, "value.toSwaggerHeader() err should not be nil")
 		}
 	}
 }

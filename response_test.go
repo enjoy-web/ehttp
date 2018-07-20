@@ -15,7 +15,7 @@ func TestResponse_ToSwaggerResponse(t *testing.T) {
 		},
 	}
 	if _, err := resp.ToSwaggerResponse(); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 
 	// err: invalid ValueInfo.Type in Response.Headers
@@ -28,9 +28,9 @@ func TestResponse_ToSwaggerResponse(t *testing.T) {
 		},
 	}
 	if _, err := invalidResp.ToSwaggerResponse(); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "invalidResp.ToSwaggerResponse() err should not be not")
+		testError(t, "invalidResp.ToSwaggerResponse() err should not be not")
 	}
 
 	// err: invalid model
@@ -39,8 +39,8 @@ func TestResponse_ToSwaggerResponse(t *testing.T) {
 		Model:       map[string]string{}, // model must be a struct or []struct
 	}
 	if _, err := invalidResp.ToSwaggerResponse(); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "invalidResp.ToSwaggerResponse() err should not be not")
+		testError(t, "invalidResp.ToSwaggerResponse() err should not be not")
 	}
 }

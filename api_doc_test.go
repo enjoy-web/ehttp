@@ -136,41 +136,41 @@ var invalidDocPostBook2 = &APIDocCommon{
 
 func TestAPIDocMethodGET_ToSwaggerOperation(t *testing.T) {
 	if _, err := docGETBook.ToSwaggerOperation(); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 
 	if _, err := invalidDocGETBook.ToSwaggerOperation(); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "invalidDocGETBook.ToSwaggerOperation() err should not be nil")
+		testError(t, "invalidDocGETBook.ToSwaggerOperation() err should not be nil")
 	}
 }
 
 func TestAPIDocMethodGET_ToSwaggerDefinitions(t *testing.T) {
 	if _, err := docGETBook.ToSwaggerDefinitions(); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 }
 func TestAPIDocCommon_ToSwaggerOperation(t *testing.T) {
 	if _, err := docPostBook.ToSwaggerOperation(); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 
 	if _, err := invalidDocPostBook.ToSwaggerOperation(); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "invalidDocPostBook.ToSwaggerOperation() err should not be nil")
+		testError(t, "invalidDocPostBook.ToSwaggerOperation() err should not be nil")
 	}
 
 	if _, err := invalidDocPostBook2.ToSwaggerOperation(); err != nil {
-		RestTestLog(t, err)
+		testLog(t, err)
 	} else {
-		RestTestError(t, "invalidDocPostBook.ToSwaggerOperation() err should not be nil")
+		testError(t, "invalidDocPostBook.ToSwaggerOperation() err should not be nil")
 	}
 }
 
 func TestAPIDocCommon_ToSwaggerDefinitions(t *testing.T) {
 	if _, err := docPostBook.ToSwaggerDefinitions(); err != nil {
-		RestTestError(t, err)
+		testError(t, err)
 	}
 }

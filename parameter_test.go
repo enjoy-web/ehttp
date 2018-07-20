@@ -22,7 +22,7 @@ func TestParameter_ToSwaggerParameters(t *testing.T) {
 	}
 	for name, parameter := range Parameters {
 		if _, err := parameter.ToSwaggerParameters(name); err != nil {
-			RestTestError(t, err)
+			testError(t, err)
 		}
 	}
 
@@ -43,9 +43,9 @@ func TestParameter_ToSwaggerParameters(t *testing.T) {
 
 	for name, parameter := range invalidParameters {
 		if _, err := parameter.ToSwaggerParameters(name); err != nil {
-			RestTestLog(t, err)
+			testLog(t, err)
 		} else {
-			RestTestError(t, "parameter.ToSwaggerParameters(name) err should not be nil")
+			testError(t, "parameter.ToSwaggerParameters(name) err should not be nil")
 		}
 	}
 
