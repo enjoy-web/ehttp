@@ -34,7 +34,6 @@ var DocPostBook = &ehttp.APIDocCommon{
 
 func HandlePostBook(c *gin.Context, err error) {
 	if err != nil {
-
 		c.JSON(400, model.NewErrorMessage(model.ErrorCodeParameter, err))
 		return
 	}

@@ -27,7 +27,7 @@ var DocGETBook = &ehttp.APIDocMethodGET{
 
 func HandleGETBook(c *gin.Context, err error) {
 	if err != nil {
-		model.NewErrorMessage(model.ErrorCodeParameter, err)
+		c.JSON(400, model.NewErrorMessage(model.ErrorCodeParameter, err))
 		return
 	}
 	id := c.Param("id")
