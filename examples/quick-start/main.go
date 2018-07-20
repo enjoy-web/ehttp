@@ -6,26 +6,13 @@ import (
 )
 
 type ErrorMessage struct {
-	Code    int    `json:"code" desc:"the error code"`
 	Message string `json:"message" desc:"the error message"`
 	Details string `json:"detail" desc:"the error detail"`
 }
 
-type BookImageUrls struct {
-	Small  string `json:"small" desc:"small image url"`
-	Medium string `json:"medium" desc:"medium image url"`
-	Large  string `json:"larger" desc:"large image url"`
-}
-
 type Book struct {
-	ID        string        `json:"id" desc:"the book id"`
-	Title     string        `json:"title" desc:"the book title"`
-	Summary   string        `json:"summary" desc:"the book summay"`
-	Authors   []string      `json:"authors" desc:"the book authors"`
-	Images    BookImageUrls `json:"images" desc:"the book images"`
-	Pages     int           `json:"pages" desc:"the book pages"`
-	Price     float32       `json:"price" min:"0" desc:"the book Price"`
-	HasReview bool          `json:"has_review" desc:"has review"`
+	ID    string `json:"id" desc:"the book id"`
+	Title string `json:"title" desc:"the book title"`
 }
 
 var DocGETBook = &ehttp.APIDocMethodGET{
@@ -49,16 +36,13 @@ var DocGETBook = &ehttp.APIDocMethodGET{
 
 func HandleGETBook(c *gin.Context, err error) {
 	if err != nil {
-		c.JSON(400, &ErrorMessage{1000, "parameter error", err.Error()})
+		c.JSON(400, &ErrorMessage{"parameter error", err.Error()})
 		return
 	}
 	id := c.Param("id")
 	book := &Book{
-		ID:      id,
-		Title:   "Demo book",
-		Summary: "This is a demo book",
-		Authors: []string{"John"},
-		Images:  BookImageUrls{},
+		ID:    id,
+		Title: "Demo book",
 	}
 	c.JSON(200, book)
 }
