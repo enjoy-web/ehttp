@@ -1,6 +1,10 @@
 package rest
 
-import "github.com/gin-gonic/gin"
+import (
+	"errors"
+
+	"github.com/gin-gonic/gin"
+)
 
 type corsInfos struct {
 	options *corsInfo
@@ -9,22 +13,6 @@ type corsInfos struct {
 	post    *corsInfo
 	patch   *corsInfo
 	delete  *corsInfo
-}
-
-func (c *corsInfos) setMethods(method string) {
-	c.OPTIONS().addMethod(method)
-	switch method {
-	case GET:
-		c.GET().addMethod(method)
-	case PUT:
-		c.PUT().addMethod(method)
-	case POST:
-		c.POST().addMethod(method)
-	case PATCH:
-		c.PATCH().addMethod(method)
-	case DELETE:
-		c.DELETE().addMethod(method)
-	}
 }
 
 func (c *corsInfos) OPTIONS() *corsInfo {
@@ -113,38 +101,38 @@ type accessControlAllows struct {
 }
 
 type accessControlAllow struct {
-	Methods          string
-	Headers          string
-	AllowAnyResource bool
-	Origins          map[string]bool
-	Credentials      bool
+	Methods     string
+	Headers     string
+	Origins     map[string]bool
+	Credentials bool
 }
 
 // cors Cross-Origin Resource Sharing
 // (CORS) is a mechanism that uses additional HTTP headers to tell a browser
 // to let a web application running at one origin (domain) have permission to access selected resources
 // from a server at a different origin.
-func (a *accessControlAllow) cors(c *gin.Context) {
+func (a *accessControlAllow) cors(c *gin.Context) error {
 	c.Writer.Header().Set("Access-Control-Allow-Methods", a.Methods)
 	c.Writer.Header().Set("Access-Control-Allow-Headers", a.Headers)
-	if a.AllowAnyResource {
+
+	if _, ok := a.Origins["*"]; ok {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	} else {
-		if _, ok := a.Origins["*"]; ok {
-			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		} else {
-			origin := c.Request.Header.Get("Origin")
-			if origin != "" {
-				_, ok := a.Origins[origin]
-				if ok {
-					c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
-				}
+		origin := c.Request.Header.Get("Origin")
+		if origin != "" {
+			_, ok := a.Origins[origin]
+			if ok {
+				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			} else {
+				return errors.New("Origin " + origin + " is not allow")
 			}
 		}
 	}
+
 	if a.Credentials {
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	}
+	return nil
 }
 
 // sliceToStringWithDeduplication convert to a deduplicated string

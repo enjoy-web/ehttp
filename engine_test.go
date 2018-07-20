@@ -2,8 +2,10 @@ package rest
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -67,15 +69,19 @@ type Book struct {
 	HasReview bool          `json:"has_review"`
 }
 
-var confForTest = &Config{
-	Schemes:            []Scheme{SchemeHTTP, SchemeHTTPS},
-	Host:               "127.0.0.1:8000",
-	BasePath:           "/dev",
-	Version:            "v1",
-	Title:              " demo APIS",
-	Description:        "demo APIS\n\n" + newCodeErrorMarkDownDoc(ErrorCodes),
-	AllowOrigin:        true,
-	OpenAPIDocumentURL: true,
+type Books struct {
+	Total int64   `json:"total" desc:"total of zoos"`
+	Start int64   `json:"start"`
+	Count int64   `json:"count"`
+	Books []*Book `json:"books" desc:"books"`
+}
+
+func getInt64InQuery(c *gin.Context, name string) (int64, error) {
+	str, ok := c.GetQuery(name)
+	if !ok {
+		return 0, errors.New("miss parameter " + name + " InQuery")
+	}
+	return strconv.ParseInt(str, 10, 64)
 }
 
 var DocGETBook = &APIDocMethodGET{
@@ -162,18 +168,181 @@ func HandlePostBook(c *gin.Context, err error) {
 	c.JSON(200, book)
 }
 
-func TestEngin(t *testing.T) {
-	runServer(t)
-	testGet(t)
-	testPost(t)
-	testGetSwaggerJSON(t)
-	testOptions(t)
+var DocDELETEBook = &APIDocMethodGET{
+	Summary: "delete book info by id",
+	Accept:  []string{Application_Json},
+	Parameters: map[string]Parameter{
+		"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
+		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
+	},
+	Responses: map[int]Response{
+		200: Response{
+			Description: "successful operation",
+			Model:       &Book{},
+		},
+		400: Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
 }
 
-func runServer(t *testing.T) {
+func HandleDELETEBook(c *gin.Context, err error) {
+	if err != nil {
+		c.JSON(400, &ErrorMessage{-1, "parameter error", err.Error()})
+		return
+	}
+	id := c.Param("id")
+	book := &Book{
+		ID:      id,
+		Title:   "Demo book",
+		Summary: "This is a demo book",
+		Authors: []string{"John"},
+		Images: BookImageUrls{
+			Small:  "small-url",
+			Medium: "medium-url",
+			Large:  "large-url",
+		},
+		Pages:     121,
+		Price:     40.50,
+		HasReview: true,
+	}
+	c.JSON(200, book)
+}
+
+var DocGETBooks = &APIDocMethodGET{
+	Summary: "Get book info by id",
+	Accept:  []string{Application_Json},
+	Parameters: map[string]Parameter{
+		"version":   Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
+		"limit":     Parameter{InQuery: &ValueInfo{Type: "int64", Min: "0", Max: "1000", Required: true, Desc: "the limit of searching"}},
+		"offset":    Parameter{InQuery: &ValueInfo{Type: "int64", Required: true, Desc: "the offset of searching"}},
+		"sort":      Parameter{InQuery: &ValueInfo{Type: "string", Enum: "id -id price -price", Desc: "sort of searching"}},
+		"min_price": Parameter{InQuery: &ValueInfo{Type: "float32", Min: "0", Desc: "minimum price"}},
+		"max_price": Parameter{InQuery: &ValueInfo{Type: "float32", Min: "0", Desc: "minimum price"}},
+	},
+	Responses: map[int]Response{
+		200: Response{
+			Description: "successful operation",
+			Model:       &Books{},
+		},
+		400: Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+func HandleGETBooks(c *gin.Context, err error) {
+	if err != nil {
+		c.JSON(400, newErrorMessage(ErrorCodeParameter, err))
+		return
+	}
+	limit, err := getInt64InQuery(c, "limit")
+	if err != nil {
+		c.JSON(400, newErrorMessage(ErrorCodeParameter, err))
+		return
+	}
+	offset, err := getInt64InQuery(c, "offset")
+	if err != nil {
+		c.JSON(400, newErrorMessage(ErrorCodeParameter, err))
+		return
+	}
+	_books := []*Book{}
+	for i := int64(0); i < limit; i++ {
+		_books = append(_books, &Book{
+			ID:      fmt.Sprintf("book_%d", i+offset),
+			Title:   "Demo book1",
+			Summary: "This is a demo book",
+			Authors: []string{"John"},
+			Images: BookImageUrls{
+				Small:  "small-url",
+				Medium: "medium-url",
+				Large:  "large-url",
+			},
+			Pages:     121,
+			Price:     40.50,
+			HasReview: true,
+		})
+	}
+	c.JSON(200, &Books{
+		Total: 100,
+		Start: offset,
+		Count: 2,
+		Books: _books,
+	})
+}
+
+var conf = &Config{
+	Schemes:            []Scheme{SchemeHTTP, SchemeHTTPS},
+	Host:               "127.0.0.1:18000",
+	BasePath:           "/dev",
+	Version:            "v1",
+	Title:              " demo APIS",
+	Description:        "demo APIS\n\n" + newCodeErrorMarkDownDoc(ErrorCodes),
+	AllowOrigin:        true,
+	OpenAPIDocumentURL: true,
+}
+
+func TestEngin(t *testing.T) {
+	testEngin(t)
+	testEnginWithOrigins(t)
+}
+
+func testEngin(t *testing.T) {
+	runServer(t, conf)
+	if err := testGetBook("http://127.0.0.1:18000:/dev/books/123456"); err != nil {
+		RestTestError(t, err)
+	}
+	if err := testGetBooks("http://127.0.0.1:18000:/dev/books?limit=2&offset=10&sort=id&min_price=9.99&max_price=30.99"); err != nil {
+		RestTestError(t, err)
+	}
+	if err := testPost("http://127.0.0.1:18000/dev/books"); err != nil {
+		RestTestError(t, err)
+	}
+	if err := testGetSwaggerJSON("http://127.0.0.1:18000:/dev/docs/swagger.json"); err != nil {
+		RestTestError(t, err)
+	}
+	if err := testOptions(GET, "http://127.0.0.1:18000:/dev/books/123456", "http://xxx.example"); err != nil {
+		RestTestError(t, err)
+	}
+
+	// "limit":     Parameter{InQuery: &ValueInfo{Type: "int64", Min: "0", Max: "1000", Required: true, Desc: "the limit of searching"}},
+
+	// err: parameter limit -1 < Min (0)
+	getBooksURL := "http://127.0.0.1:18000:/dev/books?limit=-1&offset=10"
+	if err := testGetBooks(getBooksURL); err != nil {
+		RestTestLog(t, err)
+	} else {
+		RestTestError(t, "testGetBooks("+getBooksURL+") err should not be nil")
+	}
+	// err: parameter limit 1001 > Max (1000)
+	getBooksURL = "http://127.0.0.1:18000:/dev/books?limit=1001&offset=10"
+	if err := testGetBooks(getBooksURL); err != nil {
+		RestTestLog(t, err)
+	} else {
+		RestTestError(t, "testGetBooks("+getBooksURL+") err should not be nil")
+	}
+
+	// "sort":      Parameter{InQuery: &ValueInfo{Type: "string", Enum: "id -id price -price", Desc: "sort of searching"}},
+
+	// err: paramter sort invalid enum type
+	getBooksURL = "http://127.0.0.1:18000:/dev/books?limit=5&offset=10&sort=title"
+	if err := testGetBooks(getBooksURL); err != nil {
+		RestTestLog(t, err)
+	} else {
+		RestTestError(t, "testGetBooks("+getBooksURL+") err should not be nil")
+	}
+}
+
+func runServer(t *testing.T, conf *Config) {
 	go func() {
-		router := NewEngine(confForTest)
+		router := NewEngine(conf)
 		err := router.GET("/books/:id", DocGETBook, HandleGETBook)
+		if err != nil {
+			RestTestError(t, err)
+		}
+		err = router.GET("/books", DocGETBooks, HandleGETBooks)
 		if err != nil {
 			RestTestError(t, err)
 		}
@@ -181,10 +350,17 @@ func runServer(t *testing.T) {
 		if err != nil {
 			RestTestError(t, err)
 		}
-		if _, err := router.GetSwaggerJSONDocument(); err != nil {
+		// I'm lazy
+		err = router.PUT("/books", DocPostBook, HandlePostBook)
+		if err != nil {
 			RestTestError(t, err)
 		}
-		if _, err := router.GetSwaggerYAMLDocument(); err != nil {
+		err = router.PATCH("/books", DocPostBook, HandlePostBook)
+		if err != nil {
+			RestTestError(t, err)
+		}
+		err = router.DELETE("/books/:id", DocDELETEBook, HandleDELETEBook)
+		if err != nil {
 			RestTestError(t, err)
 		}
 		router.Run()
@@ -193,21 +369,91 @@ func runServer(t *testing.T) {
 	time.Sleep(1 * time.Second)
 }
 
-func testGet(t *testing.T) {
-	resp, err := http.Get("http://127.0.0.1:8000:/dev/books/123456")
-	if err != nil {
-		RestTestError(t, err)
-		return
+func testEnginWithOrigins(t *testing.T) {
+	conf := &Config{
+		Schemes:            []Scheme{SchemeHTTP, SchemeHTTPS},
+		Host:               "127.0.0.1:18001",
+		BasePath:           "/dev",
+		Version:            "v1",
+		Title:              " demo APIS",
+		Description:        "demo APIS\n\n" + newCodeErrorMarkDownDoc(ErrorCodes),
+		AllowOrigin:        true,
+		Origins:            []string{"http://xxx.example"},
+		OpenAPIDocumentURL: false,
 	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	book := &Book{}
-	if err := json.Unmarshal(body, book); err != nil {
+	runServer(t, conf)
+	if err := testOptions(GET, "http://127.0.0.1:18001:/dev/books/123456", "http://xxx.example"); err != nil {
+		RestTestError(t, err)
+	}
+	if err := testOptions(GET, "http://127.0.0.1:18001:/dev/books/123456", "http://YYY.example"); err != nil {
+		RestTestLog(t, err)
+	} else {
+		RestTestError(t, `testOptions("http://YYY.example") err should not be nil`)
+	}
+}
+
+func testEnginWithOpenAPIDocumentURL(t *testing.T) {
+	conf := &Config{
+		Schemes:            []Scheme{SchemeHTTP, SchemeHTTPS},
+		Host:               "127.0.0.1:18002",
+		BasePath:           "/dev",
+		Version:            "v1",
+		Title:              " demo APIS",
+		Description:        "demo APIS\n\n" + newCodeErrorMarkDownDoc(ErrorCodes),
+		OpenAPIDocumentURL: true,
+		APIDocumentURL:     "/swagger/doc.json",
+	}
+	runServer(t, conf)
+	if err := testGetSwaggerJSON("http://127.0.0.1:18002:/dev/swagger/doc.json"); err != nil {
 		RestTestError(t, err)
 	}
 }
 
-func testPost(t *testing.T) {
+func testGetBook(url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	switch resp.StatusCode {
+	case 200:
+		book := &Book{}
+		return json.Unmarshal(body, book)
+	case 400:
+		errMessage := &ErrorMessage{}
+		if err := json.Unmarshal(body, errMessage); err != nil {
+			return err
+		}
+		return errors.New(string(body))
+	default:
+		return errors.New("server error")
+	}
+}
+
+func testGetBooks(url string) error {
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	switch resp.StatusCode {
+	case 200:
+		books := &Books{}
+		return json.Unmarshal(body, books)
+	case 400:
+		errMessage := &ErrorMessage{}
+		if err := json.Unmarshal(body, errMessage); err != nil {
+			return err
+		}
+		return errors.New(string(body))
+	default:
+		return errors.New("server error")
+	}
+}
+
+func testPost(url string) error {
 	newBook := &Book{
 		ID:      "01213342",
 		Title:   "Demo book",
@@ -224,13 +470,12 @@ func testPost(t *testing.T) {
 	}
 	b, err := json.Marshal(newBook)
 	if err != nil {
-		RestTestError(t, err)
+		return err
 	}
 	requestBody := bytes.NewBuffer(b)
-	resp, err := http.Post("http://127.0.0.1:8000/dev/books", Application_Json_utf8, requestBody)
+	resp, err := http.Post(url, Application_Json_utf8, requestBody)
 	if err != nil {
-		RestTestError(t, err)
-		return
+		return err
 	}
 	defer resp.Body.Close()
 	responseBody, err := ioutil.ReadAll(resp.Body)
@@ -238,23 +483,24 @@ func testPost(t *testing.T) {
 	case 200:
 		book := &Book{}
 		if err := json.Unmarshal(responseBody, book); err != nil {
-			RestTestError(t, err)
+			return err
 		}
+		return nil
 	case 400:
 		errMessage := &ErrorMessage{}
 		if err := json.Unmarshal(responseBody, errMessage); err != nil {
-			RestTestError(t, err)
+			return err
 		}
+		return errors.New(string(responseBody))
 	default:
-		RestTestError(t, "server error")
+		return errors.New("server error")
 	}
 }
 
-func testGetSwaggerJSON(t *testing.T) {
-	resp, err := http.Get("http://127.0.0.1:8000:/dev/docs/swagger.json")
+func testGetSwaggerJSON(url string) error {
+	resp, err := http.Get(url)
 	if err != nil {
-		RestTestError(t, err)
-		return
+		return err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -262,36 +508,37 @@ func testGetSwaggerJSON(t *testing.T) {
 	case 200:
 		doc := &swagger.Swagger{}
 		if err := json.Unmarshal(body, doc); err != nil {
-			RestTestError(t, err)
+			return err
 		}
+		return nil
 	default:
-		RestTestError(t, "http statusCode should not be", resp.StatusCode)
+		return fmt.Errorf("http statusCode should not be %d", resp.StatusCode)
 	}
-
 }
 
-func testOptions(t *testing.T) {
-	req, err := http.NewRequest(OPTIONS, "http://127.0.0.1:8000:/dev/books/123456", nil)
+func testOptions(method, url, origin string) error {
+	req, err := http.NewRequest(OPTIONS, url, nil)
 	if err != nil {
-		RestTestError(t, err)
+		return err
 	}
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 	req.Header.Set("Accept-Language", "en-us,en;q=0.5")
 	req.Header.Set("Accept-Encoding", "gzip,deflate")
 	req.Header.Set("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.7")
 	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("Origin", "http://xxx.example")
-	req.Header.Set("Access-Control-Request-Method", GET)
+	req.Header.Set("Origin", origin)
+	req.Header.Set("Access-Control-Request-Method", method)
 	req.Header.Set("Access-Control-Request-Headers", "Content-Type, version")
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		RestTestError(t, err)
+		return err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		RestTestError(t, "resp.StatusCode != 200")
+		return fmt.Errorf("resp.StatusCode(%d) != 200", resp.StatusCode)
 	}
+	return nil
 }
 
 func handleFunc(c *gin.Context, err error) {
@@ -303,7 +550,7 @@ func TestInvalidDoc(t *testing.T) {
 }
 
 func missParamterInDoc(t *testing.T) {
-	router := NewEngine(confForTest)
+	router := NewEngine(conf)
 	err := router.GET("/books/:id", &APIDocMethodGET{
 		Summary: "Get book info by id",
 		Accept:  []string{Application_Json},
@@ -326,7 +573,7 @@ func missParamterInDoc(t *testing.T) {
 }
 
 func missHandlerFunc(t *testing.T) {
-	router := NewEngine(confForTest)
+	router := NewEngine(conf)
 	err := router.GET("/books/:id", &APIDocMethodGET{
 		Summary: "Get book info by id",
 		Accept:  []string{Application_Json},
@@ -349,5 +596,19 @@ func missHandlerFunc(t *testing.T) {
 		RestTestLog(t, err)
 	} else {
 		RestTestError(t, "err should not be nil")
+	}
+}
+
+func TestEngine_GetSwaggerJSONDocument(t *testing.T) {
+	router := NewEngine(conf)
+	if _, err := router.GetSwaggerJSONDocument(); err != nil {
+		RestTestError(t, err)
+	}
+}
+
+func TestEngine_GetSwaggerYAMLDocument(t *testing.T) {
+	router := NewEngine(conf)
+	if _, err := router.GetSwaggerYAMLDocument(); err != nil {
+		RestTestError(t, err)
 	}
 }

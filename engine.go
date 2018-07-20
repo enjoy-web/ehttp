@@ -274,16 +274,19 @@ func (e *Engine) newHandleFunc(method string, path string, doc APIDoc, handlers 
 		accessControlAllow := e.getAccessControlAllow(method, path)
 		// hander func
 		handler = func(c *gin.Context) {
-			var err error
 			for _, rule := range rules {
 				if err := rule.Check(c); err != nil {
-					break
+					handlers[0](c, err)
+					return
 				}
 			}
 			if accessControlAllow != nil {
-				accessControlAllow.cors(c)
+				if err := accessControlAllow.cors(c); err != nil {
+					handlers[0](c, err)
+					return
+				}
 			}
-			handlers[0](c, err)
+			handlers[0](c, nil)
 		}
 	} else {
 		handler = func(c *gin.Context) {
@@ -376,7 +379,10 @@ func (e *Engine) allowOrigin() {
 		accessControlAllow := cors.OPTIONS().toAccessControlAllow()
 		e.GinEngine().OPTIONS(e.getBasePath()+path, func(c *gin.Context) {
 			if accessControlAllow != nil {
-				accessControlAllow.cors(c)
+				if err := accessControlAllow.cors(c); err != nil {
+					c.String(400, err.Error())
+					return
+				}
 			}
 			c.JSON(200, gin.H{})
 		})
