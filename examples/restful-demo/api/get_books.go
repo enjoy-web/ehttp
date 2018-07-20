@@ -66,9 +66,9 @@ func HandleGETBooks(c *gin.Context, err error) {
 		})
 	}
 	c.JSON(200, &model.Books{
-		Total: 100,
+		Total: offset + limit + 100,
 		Start: offset,
-		Count: 2,
+		Count: limit,
 		Books: _books,
 	})
 }
