@@ -1,7 +1,7 @@
-package rest
+package ehttp
 
 import (
-	"github.com/YMhao/gin-rest/swagger"
+	"github.com/enjoy-web/ehttp/swagger"
 )
 
 // Parameter info

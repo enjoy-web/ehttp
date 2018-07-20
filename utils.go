@@ -1,4 +1,4 @@
-package rest
+package ehttp
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"runtime"
 
-	"github.com/YMhao/gin-rest/swagger"
+	"github.com/enjoy-web/ehttp/swagger"
 )
 
 func nameOfFunction(f interface{}) string {

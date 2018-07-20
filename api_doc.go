@@ -1,10 +1,10 @@
-package rest
+package ehttp
 
 import (
 	"errors"
 	"fmt"
 
-	"github.com/YMhao/gin-rest/swagger"
+	"github.com/enjoy-web/ehttp/swagger"
 )
 
 // APIDoc is a interface to create Swagger.Operation

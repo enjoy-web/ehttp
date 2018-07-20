@@ -1,11 +1,11 @@
-package rest
+package ehttp
 
 import (
 	"errors"
 	"strconv"
 	"strings"
 
-	"github.com/YMhao/gin-rest/swagger"
+	"github.com/enjoy-web/ehttp/swagger"
 )
 
 // ValueInfo the parameter value type info

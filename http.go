@@ -1,4 +1,4 @@
-package rest
+package ehttp
 
 type Scheme string
 

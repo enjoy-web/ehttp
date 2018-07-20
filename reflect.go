@@ -1,4 +1,4 @@
-package rest
+package ehttp
 
 import (
 	"errors"
@@ -90,9 +90,9 @@ func isValueTypeNumber(valueType string) bool {
 
 // StructDoc document of a struct
 // Fields:
-//    UUID -- UUID(Universally Unique Identifier) of the struct, UUID = GoPkgPath + StructNamethe. (like: github.com/YMhao/gin-rest.StructDoc)
+//    UUID -- UUID(Universally Unique Identifier) of the struct, UUID = GoPkgPath + StructNamethe. (like: github.com/enjoy-web/ehttp.StructDoc)
 //    StructName -- the name of struct. (like: StructDoc)
-//    GoPkgPath -- the package path of the struct. (like: github.com/YMhao/gin-rest.StructDoc)
+//    GoPkgPath -- the package path of the struct. (like: github.com/enjoy-web/ehttp.StructDoc)
 //    StructFields -- StructFields in the struct.
 type StructDoc struct {
 	UUID         string
@@ -105,7 +105,7 @@ type StructDoc struct {
 // Fields:
 //   IsArray -- Whether the field type is an array
 //   IsStruct -- Whether the field is a struct(like: Filed StructField, Fields []StructField, FiledPtr *StructField , Fields []*StructField)
-//   RefStructUUID -- if the field is a struct, RefStructUUID is the StructUUID(like: github.com/YMhao/gin-rest/StructField)
+//   RefStructUUID -- if the field is a struct, RefStructUUID is the StructUUID(like: github.com/enjoy-web/ehttp/StructField)
 //   ValueType -- type of the value
 //   Name -- the filed name. If not be set the tag(like: FieldName string), the filed name is FieldName,
 //           else(like: FieldName string `json:"fieldName" xml:"fieldName"`) the filed name is the value(fieldName) from the tag.

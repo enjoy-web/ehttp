@@ -1,4 +1,4 @@
-package rest
+package ehttp
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/YMhao/gin-rest/swagger"
+	"github.com/enjoy-web/ehttp/swagger"
 	"github.com/gin-gonic/gin"
 )
 

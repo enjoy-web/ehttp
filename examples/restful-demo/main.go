@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	rest "github.com/YMhao/gin-rest"
+	"github.com/enjoy-web/ehttp"
 	"github.com/gin-gonic/gin"
 )
 
@@ -62,19 +62,19 @@ type Book struct {
 	HasReview bool          `json:"has_review"`
 }
 
-var DocGETBook = &rest.APIDocMethodGET{
+var DocGETBook = &ehttp.APIDocMethodGET{
 	Summary: "Get book info by id",
-	Accept:  []string{rest.Application_Json},
-	Parameters: map[string]rest.Parameter{
-		"id":      rest.Parameter{InPath: &rest.ValueInfo{Type: "string"}},
-		"version": rest.Parameter{InHeader: &rest.ValueInfo{Type: "string", Desc: "the version of api"}},
+	Accept:  []string{ehttp.Application_Json},
+	Parameters: map[string]ehttp.Parameter{
+		"id":      ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string"}},
+		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
 	},
-	Responses: map[int]rest.Response{
-		200: rest.Response{
+	Responses: map[int]ehttp.Response{
+		200: ehttp.Response{
 			Description: "successful operation",
 			Model:       &Book{},
 		},
-		400: rest.Response{
+		400: ehttp.Response{
 			Description: "failed operation",
 			Model:       &ErrorMessage{},
 		},
@@ -104,23 +104,23 @@ func HandleGETBook(c *gin.Context, err error) {
 	c.JSON(200, book)
 }
 
-var DocPostBook = &rest.APIDocCommon{
+var DocPostBook = &ehttp.APIDocCommon{
 	Summary:     "new a book",
-	Accept:      []string{rest.Application_Json},
-	ContentType: []string{rest.Application_Json},
-	Parameters: map[string]rest.Parameter{
-		"version": rest.Parameter{InHeader: &rest.ValueInfo{Type: "string", Desc: "the version of api"}},
+	Accept:      []string{ehttp.Application_Json},
+	ContentType: []string{ehttp.Application_Json},
+	Parameters: map[string]ehttp.Parameter{
+		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
 	},
-	Request: &rest.Request{
+	Request: &ehttp.Request{
 		Description: "the book info",
 		Model:       &Book{},
 	},
-	Responses: map[int]rest.Response{
-		200: rest.Response{
+	Responses: map[int]ehttp.Response{
+		200: ehttp.Response{
 			Description: "successful operation",
 			Model:       &Book{},
 		},
-		400: rest.Response{
+		400: ehttp.Response{
 			Description: "failed operation",
 			Model:       &ErrorMessage{},
 		},
@@ -147,8 +147,8 @@ func HandlePostBook(c *gin.Context, err error) {
 }
 
 func main() {
-	conf := &rest.Config{
-		Schemes:            []rest.Scheme{rest.SchemeHTTP, rest.SchemeHTTPS},
+	conf := &ehttp.Config{
+		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP, ehttp.SchemeHTTPS},
 		Host:               ":8000",
 		BasePath:           "/dev",
 		Version:            "v1",
@@ -157,7 +157,7 @@ func main() {
 		AllowOrigin:        true,
 		OpenAPIDocumentURL: true,
 	}
-	router := rest.NewEngine(conf)
+	router := ehttp.NewEngine(conf)
 	err := router.GET("/books/:id", DocGETBook, HandleGETBook)
 	if err != nil {
 		panic(err)

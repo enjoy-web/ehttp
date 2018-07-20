@@ -1,4 +1,4 @@
-package rest
+package ehttp
 
 import "github.com/gin-gonic/gin"
 

@@ -1,4 +1,4 @@
-package rest
+package ehttp
 
 // Config config for server
 // Fields:

@@ -1,11 +1,11 @@
-package rest
+package ehttp
 
 import (
 	"encoding/json"
 	"errors"
 	"log"
 
-	"github.com/YMhao/gin-rest/swagger"
+	"github.com/enjoy-web/ehttp/swagger"
 	"github.com/ghodss/yaml"
 	"github.com/gin-gonic/gin"
 )
