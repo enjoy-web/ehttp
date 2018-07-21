@@ -56,7 +56,7 @@ type Book struct {
 
 var DocGETBook = &ehttp.APIDocMethodGET{
 	Summary: "根据id获取书的信息",
-	Accept:  []string{ehttp.Application_Json},
+	Produces:  []string{ehttp.Application_Json},
 	Parameters: map[string]ehttp.Parameter{
 		"id":      ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "书的id"}},
 		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "api的版本"}},
@@ -160,7 +160,7 @@ type Book struct {
 	Images    BookImageUrls `json:"images" desc:"书的图片"`
 }
 ```
-Modle Book 有两个字段，分别是： ID 和 Images. 
+Module Book 有两个字段，分别是： ID 和 Images. 
 字段`ID`的类型是`string`，标签是：`json:"id" desc:"书的id"`
 字段`Images`的类型是`BookImageUrls`,标签是:`json:"images" desc:"书的图片"`
 
@@ -227,6 +227,57 @@ type User struct {
 
 ### APIDoc
 
+```golang
+type APIDocMethodGET struct {
+	Tags        []string
+	Summary     string
+	Description string
+	Accept      []string
+	Parameters  map[string]Parameter
+	Responses   map[int]Response
+}
+
+type APIDocCommon struct {
+	Tags        []string
+	Summary     string
+	Description string
+	Accept      []string
+	Parameters  map[string]Parameter
+	Request     *Request
+	ContentType []string
+	Responses   map[int]Response
+}
+
+type Parameter struct {
+	InPath     *ValueInfo
+	InHeader   *ValueInfo
+	InQuery    *ValueInfo
+	InFormData *ValueInfo
+}
+
+type ValueInfo struct {
+	Type     string
+	Enum     string
+	Min      string
+	Max      string
+	Desc     string
+	Required bool
+}
+
+type Request struct {
+	Description string
+	Model       interface{}
+}
+
+type Response struct {
+	Description string
+	Model       interface{}
+	Headers     map[string]ValueInfo
+}
+
+```
+
+
 #### APIDocDemo
 
 ```golang
@@ -243,7 +294,7 @@ type Book struct {
 
 var DocGETBook = &ehttp.APIDocMethodGET{
 	Summary: "Get book info by id",
-	Accept:  []string{ehttp.Application_Json},
+	Produces:  []string{ehttp.Application_Json},
 	Parameters: map[string]ehttp.Parameter{
 		"id":      ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
 		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
@@ -262,8 +313,8 @@ var DocGETBook = &ehttp.APIDocMethodGET{
 
 var DocPostBook = &ehttp.APIDocCommon{
 	Summary:     "new a book",
-	Accept:      []string{ehttp.Application_Json},
-	ContentType: []string{ehttp.Application_Json},
+	Produces:      []string{ehttp.Application_Json},
+	Consumes: []string{ehttp.Application_Json},
 	Parameters: map[string]ehttp.Parameter{
 		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
 	},

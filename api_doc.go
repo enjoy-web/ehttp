@@ -19,7 +19,7 @@ type APIDoc interface {
 //   Tags -- A list of tags for API documentation control. Tags can be used for logical grouping of operations by resources or any other qualifier.
 //   Summary -- Summary of this api
 //   Description -- Detail info of this api
-//   Accept -- Accept int http header, such as "accept: application/json"
+//   Produces -- A list of MIME types the operation can produce.
 //   Parameters -- A list of parameters that are applicable for all the operations described under this path.
 //                 These parameters can be overridden at the operation level, but can't be removed there.
 //                 The list MUST NOT include duplicated parameters. A unique parameter is defined by a combination of a name and location.
@@ -30,7 +30,7 @@ type APIDocMethodGET struct {
 	Tags        []string
 	Summary     string
 	Description string
-	Accept      []string
+	Produces    []string
 	Parameters  map[string]Parameter
 	Responses   map[int]Response
 }
@@ -46,8 +46,8 @@ func (doc APIDocMethodGET) ToSwaggerOperation() (*swagger.Operation, error) {
 		operation.Tags = doc.Tags
 	}
 	// set Produces
-	if len(doc.Accept) > 0 {
-		operation.Produces = doc.Accept
+	if len(doc.Produces) > 0 {
+		operation.Produces = doc.Produces
 	}
 	// set Parameters
 	if len(doc.Parameters) > 0 {
@@ -117,23 +117,23 @@ func (doc APIDocMethodGET) checkParameters() error {
 //   Tags -- A list of tags for API documentation control. Tags can be used for logical grouping of operations by resources or any other qualifier.
 //   Summary -- Summary of this api
 //   Description -- Detail info of this api
-//   Accept -- Accept in http header, such as "accept: application/json"
+//   Produces -- A list of MIME types the operation can produce.
+//   Consumes -- A list of MIME types the operation can consume.
 //   Parameters -- A list of parameters that are applicable for all the operations described under this path.
 //                 These parameters can be overridden at the operation level, but can't be removed there.
 //                 The list MUST NOT include duplicated parameters. A unique parameter is defined by a combination of a name and location.
 //                 The list can use the Reference Object to link to parameters that are defined at the Swagger Object's parameters.
 //                 There can be one "body" parameter at most.
 //   Request -- the request in http body.
-//   ContentType -- Content-type in http header, such as "Content-type: application/json"
 //   Responses -- An object to hold responses that can be used across operations
 type APIDocCommon struct {
 	Tags        []string
 	Summary     string
 	Description string
-	Accept      []string
+	Produces    []string
+	Consumes    []string
 	Parameters  map[string]Parameter
 	Request     *Request
-	ContentType []string
 	Responses   map[int]Response
 }
 
@@ -148,12 +148,12 @@ func (doc APIDocCommon) ToSwaggerOperation() (*swagger.Operation, error) {
 		operation.Tags = doc.Tags
 	}
 	// set Produces
-	if len(doc.Accept) > 0 {
-		operation.Produces = doc.Accept
+	if len(doc.Produces) > 0 {
+		operation.Produces = doc.Produces
 	}
 	// set Consumes
-	if len(doc.ContentType) > 0 {
-		operation.Consumes = doc.ContentType
+	if len(doc.Consumes) > 0 {
+		operation.Consumes = doc.Consumes
 	}
 	// init Parameters
 	if len(doc.Parameters) > 0 || doc.Request != nil {

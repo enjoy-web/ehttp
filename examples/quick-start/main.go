@@ -16,8 +16,8 @@ type Book struct {
 }
 
 var DocGETBook = &ehttp.APIDocMethodGET{
-	Summary: "Get book info by id",
-	Accept:  []string{ehttp.Application_Json},
+	Summary:  "Get book info by id",
+	Produces: []string{ehttp.Application_Json},
 	Parameters: map[string]ehttp.Parameter{
 		"id":      ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
 		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},

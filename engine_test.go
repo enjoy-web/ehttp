@@ -85,8 +85,8 @@ func getInt64InQuery(c *gin.Context, name string) (int64, error) {
 }
 
 var DocGETBook = &APIDocMethodGET{
-	Summary: "Get book info by id",
-	Accept:  []string{Application_Json},
+	Summary:  "Get book info by id",
+	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
 		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
@@ -127,9 +127,9 @@ func HandleGETBook(c *gin.Context, err error) {
 }
 
 var DocPostBook = &APIDocCommon{
-	Summary:     "new a book",
-	Accept:      []string{Application_Json},
-	ContentType: []string{Application_Json},
+	Summary:  "new a book",
+	Produces: []string{Application_Json},
+	Consumes: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
 	},
@@ -169,8 +169,8 @@ func HandlePostBook(c *gin.Context, err error) {
 }
 
 var DocDELETEBook = &APIDocMethodGET{
-	Summary: "delete book info by id",
-	Accept:  []string{Application_Json},
+	Summary:  "delete book info by id",
+	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
 		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
@@ -211,8 +211,8 @@ func HandleDELETEBook(c *gin.Context, err error) {
 }
 
 var DocGETBooks = &APIDocMethodGET{
-	Summary: "Get book info by id",
-	Accept:  []string{Application_Json},
+	Summary:  "Get book info by id",
+	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"version":   Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
 		"limit":     Parameter{InQuery: &ValueInfo{Type: "int64", Min: "0", Max: "1000", Required: true, Desc: "the limit of searching"}},
@@ -552,8 +552,8 @@ func TestInvalidDoc(t *testing.T) {
 func missParamterInDoc(t *testing.T) {
 	router := NewEngine(conf)
 	err := router.GET("/books/:id", &APIDocMethodGET{
-		Summary: "Get book info by id",
-		Accept:  []string{Application_Json},
+		Summary:  "Get book info by id",
+		Produces: []string{Application_Json},
 		Responses: map[int]Response{
 			200: Response{
 				Description: "successful operation",
@@ -575,8 +575,8 @@ func missParamterInDoc(t *testing.T) {
 func missHandlerFunc(t *testing.T) {
 	router := NewEngine(conf)
 	err := router.GET("/books/:id", &APIDocMethodGET{
-		Summary: "Get book info by id",
-		Accept:  []string{Application_Json},
+		Summary:  "Get book info by id",
+		Produces: []string{Application_Json},
 		Parameters: map[string]Parameter{
 			"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
 			"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},

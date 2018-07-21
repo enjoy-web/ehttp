@@ -24,8 +24,8 @@ type book struct {
 }
 
 var docGETBook = &APIDocMethodGET{
-	Summary: "Get book info by id",
-	Accept:  []string{Application_Json},
+	Summary:  "Get book info by id",
+	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
 		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
@@ -43,8 +43,8 @@ var docGETBook = &APIDocMethodGET{
 }
 
 var invalidDocGETBook = &APIDocMethodGET{
-	Summary: "Get book info by id",
-	Accept:  []string{Application_Json},
+	Summary:  "Get book info by id",
+	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
 		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
@@ -63,9 +63,9 @@ var invalidDocGETBook = &APIDocMethodGET{
 }
 
 var docPostBook = &APIDocCommon{
-	Summary:     "new a book",
-	Accept:      []string{Application_Json},
-	ContentType: []string{Application_Json},
+	Summary:  "new a book",
+	Produces: []string{Application_Json},
+	Consumes: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
 	},
@@ -86,9 +86,9 @@ var docPostBook = &APIDocCommon{
 }
 
 var invalidDocPostBook = &APIDocCommon{
-	Summary:     "new a book",
-	Accept:      []string{Application_Json},
-	ContentType: []string{Application_Json},
+	Summary:  "new a book",
+	Produces: []string{Application_Json},
+	Consumes: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
 		// err:  Parameter.InFormData and APIDocCommon.Request can't coexist
@@ -112,9 +112,9 @@ var invalidDocPostBook = &APIDocCommon{
 }
 
 var invalidDocPostBook2 = &APIDocCommon{
-	Summary:     "new a book",
-	Accept:      []string{Application_Json},
-	ContentType: []string{Application_Json},
+	Summary:  "new a book",
+	Produces: []string{Application_Json},
+	Consumes: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
 	},
