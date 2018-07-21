@@ -3,8 +3,6 @@ package ehttp
 // Config config for server
 // Fields:
 //   Schemes -- such as SCHEMES_HTTP, SCHEMES_HTTPS, SCHEMES_HTTP_AND_HTTPS
-//   Host -- such as "127.0.0.1:8000"
-//   DomainName -- domain name, like github.com
 //   BasePath -- such as "/apis"
 //   Version -- such as "v1.0.0"
 //   Title -- the title of server
@@ -15,8 +13,6 @@ package ehttp
 //   APIDocumentURL -- the url to get openAPI(swagger) document, default value is /docs/swagger.json
 type Config struct {
 	Schemes            []Scheme
-	Host               string
-	DomainName         string
 	BasePath           string
 	Version            string
 	Title              string

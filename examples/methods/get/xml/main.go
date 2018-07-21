@@ -6,21 +6,20 @@ import (
 )
 
 type ErrorMessage struct {
-	Message string `json:"message" desc:"the error message"`
-	Details string `json:"detail" desc:"the error detail"`
+	Message string `xml:"message" desc:"the error message"`
+	Details string `xml:"detail" desc:"the error detail"`
 }
 
 type Book struct {
-	ID    string `json:"id" desc:"the book id"`
-	Title string `json:"title" desc:"the book title"`
+	ID    string `xml:"id" desc:"the book id"`
+	Title string `xml:"title" desc:"the book title"`
 }
 
 var DocGETBook = &ehttp.APIDocCommon{
 	Summary:  "Get book info by id",
-	Produces: []string{ehttp.Application_Json},
+	Produces: []string{ehttp.Application_Xml},
 	Parameters: map[string]ehttp.Parameter{
-		"id":      ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
-		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
+		"id": ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
 	},
 	Responses: map[int]ehttp.Response{
 		200: ehttp.Response{
@@ -36,7 +35,7 @@ var DocGETBook = &ehttp.APIDocCommon{
 
 func HandleGETBook(c *gin.Context, err error) {
 	if err != nil {
-		c.JSON(400, &ErrorMessage{"parameter error", err.Error()})
+		c.XML(400, &ErrorMessage{"parameter error", err.Error()})
 		return
 	}
 	id := c.Param("id")
@@ -44,7 +43,7 @@ func HandleGETBook(c *gin.Context, err error) {
 		ID:    id,
 		Title: "Demo book",
 	}
-	c.JSON(200, book)
+	c.XML(200, book)
 }
 
 func main() {
@@ -63,6 +62,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 	router.Run(":8000")
 }

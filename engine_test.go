@@ -275,7 +275,6 @@ func HandleGETBooks(c *gin.Context, err error) {
 
 var conf = &Config{
 	Schemes:            []Scheme{SchemeHTTP, SchemeHTTPS},
-	Host:               "127.0.0.1:18000",
 	BasePath:           "/dev",
 	Version:            "v1",
 	Title:              " demo APIS",
@@ -290,7 +289,7 @@ func TestEngin(t *testing.T) {
 }
 
 func testEngin(t *testing.T) {
-	runServer(t, conf)
+	runServer(t, conf, "127.0.0.1:18000")
 	if err := testGetBook("http://127.0.0.1:18000:/dev/books/123456"); err != nil {
 		testError(t, err)
 	}
@@ -335,7 +334,7 @@ func testEngin(t *testing.T) {
 	}
 }
 
-func runServer(t *testing.T, conf *Config) {
+func runServer(t *testing.T, conf *Config, addr ...string) {
 	go func() {
 		router := NewEngine(conf)
 		err := router.GET("/books/:id", DocGETBook, HandleGETBook)
@@ -363,7 +362,7 @@ func runServer(t *testing.T, conf *Config) {
 		if err != nil {
 			testError(t, err)
 		}
-		router.Run()
+		router.Run(addr...)
 	}()
 	t.Log("waiting 1 second for server startup")
 	time.Sleep(1 * time.Second)
@@ -372,7 +371,6 @@ func runServer(t *testing.T, conf *Config) {
 func testEnginWithOrigins(t *testing.T) {
 	conf := &Config{
 		Schemes:            []Scheme{SchemeHTTP, SchemeHTTPS},
-		Host:               "127.0.0.1:18001",
 		BasePath:           "/dev",
 		Version:            "v1",
 		Title:              " demo APIS",
@@ -381,7 +379,7 @@ func testEnginWithOrigins(t *testing.T) {
 		Origins:            []string{"http://xxx.example"},
 		OpenAPIDocumentURL: false,
 	}
-	runServer(t, conf)
+	runServer(t, conf, "127.0.0.1:18001")
 	if err := testOptions(GET, "http://127.0.0.1:18001:/dev/books/123456", "http://xxx.example"); err != nil {
 		testError(t, err)
 	}
@@ -395,7 +393,6 @@ func testEnginWithOrigins(t *testing.T) {
 func testEnginWithOpenAPIDocumentURL(t *testing.T) {
 	conf := &Config{
 		Schemes:            []Scheme{SchemeHTTP, SchemeHTTPS},
-		Host:               "127.0.0.1:18002",
 		BasePath:           "/dev",
 		Version:            "v1",
 		Title:              " demo APIS",
@@ -403,7 +400,7 @@ func testEnginWithOpenAPIDocumentURL(t *testing.T) {
 		OpenAPIDocumentURL: true,
 		APIDocumentURL:     "/swagger/doc.json",
 	}
-	runServer(t, conf)
+	runServer(t, conf, "127.0.0.1:18002")
 	if err := testGetSwaggerJSON("http://127.0.0.1:18002:/dev/swagger/doc.json"); err != nil {
 		testError(t, err)
 	}

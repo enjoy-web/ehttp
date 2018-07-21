@@ -38,7 +38,7 @@ func NewEngineByGin(conf *Config, engine *gin.Engine) *Engine {
 }
 
 // Run server
-func (e *Engine) Run() {
+func (e *Engine) Run(addr ...string) {
 	// open api document url
 	if e.Conf.OpenAPIDocumentURL {
 		e.openAPIDocumentURL()
@@ -47,7 +47,7 @@ func (e *Engine) Run() {
 	if e.Conf.AllowOrigin {
 		e.allowOrigin()
 	}
-	e.GinEngine().Run(e.Conf.Host)
+	e.GinEngine().Run(addr...)
 }
 
 // GET is a shortcut for gin router.Handle("GET", path, handle).
@@ -129,12 +129,7 @@ func (e *Engine) initSwaggerConf() {
 		Description: e.Conf.Description,
 		Version:     e.Conf.Version,
 	}
-	// set swagger Host
-	if e.Conf.DomainName != "" {
-		e.Swagger.Host = e.Conf.DomainName
-	} else {
-		e.Swagger.Host = e.Conf.Host
-	}
+
 	// set swagger basePath
 	e.Swagger.BasePath = e.Conf.BasePath
 
@@ -408,9 +403,6 @@ func (e *Engine) openAPIDocumentURL() {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 		swagger := *e.Swagger
-		if e.Conf.DomainName == "" {
-			swagger.Host = c.Request.Host
-		}
 		c.JSON(200, swagger)
 	})
 	if allowOrigin {

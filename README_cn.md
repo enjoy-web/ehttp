@@ -1,5 +1,6 @@
 # ehttp Web Framework 
 
+
 - [ehttp Web Framework](#ehttp-web-framework)
     - [中文说明 [English Introduction](README.md)](#中文说明-english-introductionreadmemd)
     - [快速入门](#快速入门)
@@ -14,7 +15,15 @@
                     - [字段标签-枚举(enum)](#字段标签-枚举enum)
                     - [字段标签-最小值（min）、最大值（max）](#字段标签-最小值min最大值max)
         - [APIDoc](#apidoc)
-            - [APIDocDemo](#apidocdemo)
+            - [APIDoc参数demo](#apidoc参数demo)
+            - [APIDocDemo(完整的APIDoc Demo)](#apidocdemo完整的apidoc-demo)
+        - [Config](#config)
+            - [Config Demo](#config-demo)
+    - [API Demo](#api-demo)
+        - [GET](#get)
+            - [GET - JSON](#get---json)
+            - [GET - XML](#get---xml)
+            - [GET - JSON And XML](#get---json-and-xml)
 
 ## 中文说明 [English Introduction](README.md)
 
@@ -89,7 +98,6 @@ func HandleGETBook(c *gin.Context, err error) {
 func main() {
 	conf := &ehttp.Config{
 		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
-		Host:               ":8000",
 		BasePath:           "/book_store",
 		Version:            "v1",
 		Title:              "book store APIs 文档",
@@ -103,7 +111,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	router.Run()
+	router.Run(":8000")
 }
 
 ```
@@ -231,7 +239,34 @@ type User struct {
 
 ### APIDoc
 
-#### APIDocDemo
+APIDoc是有意义的，在接收到http请求时，会根据APIDoc的参数规则进行检查，并把检查结果error信息作为handler函数的参数
+
+#### APIDoc参数demo
+
+```golang
+ehttp.APIDocCommon{
+	Parameters: map[string]ehttp.Parameter{
+		// 参数名称是id，参数出现在http请求的 url路径中，类型是string， 描述是"the id"
+		"id": ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id"}},
+		// 参数名称是user-type，参数出现在http请求的header中，类型是string， 枚举类型有: admirn 和 normal, 该参数是必填的， 描述是"user type"
+		"user-type": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Enum: "admin normal", Required: true, Desc: "user type"}},
+		// 参数名是limit, 参数出现在http请求的， 类型是int32, 最小值是0, 最大值是1000, 该参数是必填的
+		"limit": ehttp.Parameter{InQuery: &ehttp.ValueInfo{Type: "int32", Min: "0", Max: "100", Required: true}},
+		// 参数名是data, 参数出现在http请求的， 类型是string
+		"data":  ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "string"},
+		// 参数名是file1, 参数出现在http请求的， 类型是file, 最小值是0, 最大值是1000, 该参数是选填的
+	    "file1": ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "file", Desc: "the file to upload"}},
+	},
+}
+```
+APIDoc参数在http请求中的位置有:`InPath,InHeader,InQuery,InFormData`.
+
+ValueInfo.Type支持以下类型:`int, int32, int64, uint, uint32, uint64, bool, string, float32, float64, file`.
+
+注意： 在非InFormData的情况下，ValueInfo.Type不允许设置为`file `
+
+
+#### APIDocDemo(完整的APIDoc Demo)
 
 ```golang
 
@@ -296,3 +331,262 @@ var DocCommonDemo = &ehttp.APIDocCommon{
 }
 
 ```
+
+### Config
+
+#### Config Demo
+
+```golang
+conf := &ehttp.Config{
+	// 必填，API的传输协议。 从列表ehttp.SchemeHTTP, ehttp.SchemeHTTPS中选择
+	Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP, ehttp.SchemeHTTPS},
+	// 选填，API的基本路径， 必须斜杠(/)开头，BasePath不支持路径模板。
+	BasePath:           "/dev",
+	// 必填: 版本号： 目前仅用于文档显示
+	Version:            "v1",
+	// 必填: API的标题
+	Title:              "Demo APIS",
+	// 必填: API描述信息
+	Description:        "Demo APIS Description",
+	// 选填： 是否允许跨域操作 (swagger UI 需要跨域))
+	AllowOrigin:        true,
+	// 选填: 跨域操作的 Origins， 
+	Origins: []string{"*"}，
+	// 选填: 打开swagger文档URL的开关
+	OpenAPIDocumentURL: true,
+	// 选填： 自定义的swagger文档URL, 默认值是/docs/swagger.json
+	APIDocumentURL： "/docs/swagger.json"，
+}
+```
+
+## API Demo
+
+### GET
+
+#### GET - JSON
+
+```golang
+package main
+
+import (
+	"github.com/enjoy-web/ehttp"
+	"github.com/gin-gonic/gin"
+)
+
+type ErrorMessage struct {
+	Message string `json:"message" desc:"the error message"`
+	Details string `json:"detail" desc:"the error detail"`
+}
+
+type Book struct {
+	ID    string `json:"id" desc:"the book id"`
+	Title string `json:"title" desc:"the book title"`
+}
+
+var DocGETBook = &ehttp.APIDocCommon{
+	Summary:  "Get book info by id",
+	Produces: []string{ehttp.Application_Json},
+	Parameters: map[string]ehttp.Parameter{
+		"id": ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
+	},
+	Responses: map[int]ehttp.Response{
+		200: ehttp.Response{
+			Description: "successful operation",
+			Model:       &Book{},
+		},
+		400: ehttp.Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+func HandleGETBook(c *gin.Context, err error) {
+	if err != nil {
+		c.JSON(400, &ErrorMessage{"parameter error", err.Error()})
+		return
+	}
+	id := c.Param("id")
+	book := &Book{
+		ID:    id,
+		Title: "Demo book",
+	}
+	c.JSON(200, book)
+}
+
+func main() {
+	conf := &ehttp.Config{
+		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
+		BasePath:           "/book_store",
+		Version:            "v1",
+		Title:              "book store APIS",
+		Description:        "APIs of book",
+		AllowOrigin:        true,
+		OpenAPIDocumentURL: true,
+	}
+	router := ehttp.NewEngine(conf)
+
+	err := router.GET("/books/:id", DocGETBook, HandleGETBook)
+	if err != nil {
+		panic(err)
+	}
+
+	router.Run(":8000")
+}
+
+```
+
+#### GET - XML
+```golang
+package main
+
+import (
+	"github.com/enjoy-web/ehttp"
+	"github.com/gin-gonic/gin"
+)
+
+type ErrorMessage struct {
+	Message string `xml:"message" desc:"the error message"`
+	Details string `xml:"detail" desc:"the error detail"`
+}
+
+type Book struct {
+	ID    string `xml:"id" desc:"the book id"`
+	Title string `xml:"title" desc:"the book title"`
+}
+
+var DocGETBook = &ehttp.APIDocCommon{
+	Summary:  "Get book info by id",
+	Produces: []string{ehttp.Application_Xml},
+	Parameters: map[string]ehttp.Parameter{
+		"id": ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
+	},
+	Responses: map[int]ehttp.Response{
+		200: ehttp.Response{
+			Description: "successful operation",
+			Model:       &Book{},
+		},
+		400: ehttp.Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+func HandleGETBook(c *gin.Context, err error) {
+	if err != nil {
+		c.XML(400, &ErrorMessage{"parameter error", err.Error()})
+		return
+	}
+	id := c.Param("id")
+	book := &Book{
+		ID:    id,
+		Title: "Demo book",
+	}
+	c.XML(200, book)
+}
+
+func main() {
+	conf := &ehttp.Config{
+		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
+		BasePath:           "/book_store",
+		Version:            "v1",
+		Title:              "book store APIS",
+		Description:        "APIs of book",
+		AllowOrigin:        true,
+		OpenAPIDocumentURL: true,
+	}
+	router := ehttp.NewEngine(conf)
+
+	err := router.GET("/books/:id", DocGETBook, HandleGETBook)
+	if err != nil {
+		panic(err)
+	}
+	router.Run(":8000")
+}
+```
+
+#### GET - JSON And XML
+
+```golang
+package main
+
+import (
+	"strings"
+
+	"github.com/enjoy-web/ehttp"
+	"github.com/gin-gonic/gin"
+)
+
+type ErrorMessage struct {
+	Message string `json:"message" xml:"message" desc:"the error message"`
+	Details string `json:"detail" xml:"detail" desc:"the error detail"`
+}
+
+type Book struct {
+	ID    string `json:"id" xml:"id" desc:"the book id"`
+	Title string `json:"title" xml:"title" desc:"the book title"`
+}
+
+var DocGETBook = &ehttp.APIDocCommon{
+	Summary:  "Get book info by id",
+	Produces: []string{ehttp.Application_Json, ehttp.Application_Xml},
+	Parameters: map[string]ehttp.Parameter{
+		"id": ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
+	},
+	Responses: map[int]ehttp.Response{
+		200: ehttp.Response{
+			Description: "successful operation",
+			Model:       &Book{},
+		},
+		400: ehttp.Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+func HandleGETBook(c *gin.Context, err error) {
+	isXML := strings.Contains(c.GetHeader("accept"), ehttp.Application_Xml)
+	if err != nil {
+		if isXML {
+			c.XML(400, &ErrorMessage{"parameter error", err.Error()})
+		} else {
+			c.JSON(400, &ErrorMessage{"parameter error", err.Error()})
+		}
+		return
+	}
+	id := c.Param("id")
+	book := &Book{
+		ID:    id,
+		Title: "Demo book",
+	}
+	if isXML {
+		c.XML(200, book)
+	} else {
+		c.JSON(200, book)
+	}
+}
+
+func main() {
+	conf := &ehttp.Config{
+		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
+		BasePath:           "/book_store",
+		Version:            "v1",
+		Title:              "book store APIS",
+		Description:        "APIs of book",
+		AllowOrigin:        true,
+		OpenAPIDocumentURL: true,
+	}
+	router := ehttp.NewEngine(conf)
+
+	err := router.GET("/books/:id", DocGETBook, HandleGETBook)
+	if err != nil {
+		panic(err)
+	}
+	router.Run(":8000")
+}
+```
+
+
+

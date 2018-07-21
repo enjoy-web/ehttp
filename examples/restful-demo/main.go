@@ -9,7 +9,6 @@ import (
 func main() {
 	conf := &ehttp.Config{
 		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP, ehttp.SchemeHTTPS},
-		Host:               ":8000",
 		BasePath:           "/dev",
 		Version:            "v1",
 		Title:              " demo APIS",
@@ -30,5 +29,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	router.Run()
+	router.Run(":8000")
 }

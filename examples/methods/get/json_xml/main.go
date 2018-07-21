@@ -1,26 +1,27 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/enjoy-web/ehttp"
 	"github.com/gin-gonic/gin"
 )
 
 type ErrorMessage struct {
-	Message string `json:"message" desc:"the error message"`
-	Details string `json:"detail" desc:"the error detail"`
+	Message string `json:"message" xml:"message" desc:"the error message"`
+	Details string `json:"detail" xml:"detail" desc:"the error detail"`
 }
 
 type Book struct {
-	ID    string `json:"id" desc:"the book id"`
-	Title string `json:"title" desc:"the book title"`
+	ID    string `json:"id" xml:"id" desc:"the book id"`
+	Title string `json:"title" xml:"title" desc:"the book title"`
 }
 
 var DocGETBook = &ehttp.APIDocCommon{
 	Summary:  "Get book info by id",
-	Produces: []string{ehttp.Application_Json},
+	Produces: []string{ehttp.Application_Json, ehttp.Application_Xml},
 	Parameters: map[string]ehttp.Parameter{
-		"id":      ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
-		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
+		"id": ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
 	},
 	Responses: map[int]ehttp.Response{
 		200: ehttp.Response{
@@ -35,8 +36,13 @@ var DocGETBook = &ehttp.APIDocCommon{
 }
 
 func HandleGETBook(c *gin.Context, err error) {
+	isXML := strings.Contains(c.GetHeader("accept"), ehttp.Application_Xml)
 	if err != nil {
-		c.JSON(400, &ErrorMessage{"parameter error", err.Error()})
+		if isXML {
+			c.XML(400, &ErrorMessage{"parameter error", err.Error()})
+		} else {
+			c.JSON(400, &ErrorMessage{"parameter error", err.Error()})
+		}
 		return
 	}
 	id := c.Param("id")
@@ -44,7 +50,11 @@ func HandleGETBook(c *gin.Context, err error) {
 		ID:    id,
 		Title: "Demo book",
 	}
-	c.JSON(200, book)
+	if isXML {
+		c.XML(200, book)
+	} else {
+		c.JSON(200, book)
+	}
 }
 
 func main() {
@@ -63,6 +73,5 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 	router.Run(":8000")
 }

@@ -73,7 +73,6 @@ func HandleGETBook(c *gin.Context, err error) {
 func main() {
 	conf := &ehttp.Config{
 		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
-		Host:               ":8000",
 		BasePath:           "/book_store",
 		Version:            "v1",
 		Title:              "book store APIS",
@@ -88,7 +87,7 @@ func main() {
 		panic(err)
 	}
 
-	router.Run()
+	router.Run(":8000")
 }
 
 ```
