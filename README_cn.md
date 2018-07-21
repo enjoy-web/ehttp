@@ -115,11 +115,15 @@ $ go run main.go
 
 自动生成的 OpenAPI(swagger)文档地址是： http://127.0.0.1:8000/dev/docs/swagger.json
 
-
 如果需要在Web UI 查看API文档， 和对接口进行调试：  
->1. 打开网页： http://petstore.swagger.io (Swagger UI Live demo)， 
->2. 复制 http://127.0.0.1:8000/dev/docs/swagger.json 到输入框中，点击“Explore”按钮.
+>1. 打开网页： [http://petstore.swagger.io ](http://petstore.swagger.io) (Swagger UI Live demo)， 
+>2. 输入 http://127.0.0.1:8000/dev/docs/swagger.json 到输入框中，点击“Explore”按钮.
 >3. 然后就可看到美观的可视化的API文档， 并且可以在网页中对API进行调试。
+
+如果需要生成不同语言的SDk客户端：
+>1. 打开网页： [http://editor.swagger.io/](http://editor.swagger.io) (Swagger Edit)
+>2. 选择菜单 File->Import url, 输入 http://127.0.0.1:8000/dev/docs/swagger.json到输入框中，点击确定.
+>3. 在菜单 Generate Client 选择需要的编程语言的客户端。
 
 ## 使用说明
 
@@ -227,109 +231,66 @@ type User struct {
 
 ### APIDoc
 
-```golang
-type APIDocMethodGET struct {
-	Tags        []string
-	Summary     string
-	Description string
-	Accept      []string
-	Parameters  map[string]Parameter
-	Responses   map[int]Response
-}
-
-type APIDocCommon struct {
-	Tags        []string
-	Summary     string
-	Description string
-	Accept      []string
-	Parameters  map[string]Parameter
-	Request     *Request
-	ContentType []string
-	Responses   map[int]Response
-}
-
-type Parameter struct {
-	InPath     *ValueInfo
-	InHeader   *ValueInfo
-	InQuery    *ValueInfo
-	InFormData *ValueInfo
-}
-
-type ValueInfo struct {
-	Type     string
-	Enum     string
-	Min      string
-	Max      string
-	Desc     string
-	Required bool
-}
-
-type Request struct {
-	Description string
-	Model       interface{}
-}
-
-type Response struct {
-	Description string
-	Model       interface{}
-	Headers     map[string]ValueInfo
-}
-
-```
-
-
 #### APIDocDemo
 
 ```golang
 
+// Module ErrorMessage
 type ErrorMessage struct {
 	Message string `json:"message" desc:"the error message"`
 	Details string `json:"detail" desc:"the error detail"`
 }
 
-type Book struct {
-	ID    string `json:"id" desc:"the book id"`
-	Title string `json:"title" desc:"the book title"`
+// Module Demo
+type Demo struct {
+	ID    string `json:"id" desc:"the id"`
+	Title string `json:"title" desc:"the title"`
 }
 
-var DocGETBook = &ehttp.APIDocMethodGET{
-	Summary: "Get book info by id",
-	Produces:  []string{ehttp.Application_Json},
-	Parameters: map[string]ehttp.Parameter{
-		"id":      ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id of book"}},
-		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
-	},
-	Responses: map[int]ehttp.Response{
-		200: ehttp.Response{
-			Description: "successful operation",
-			Model:       &Book{},
-		},
-		400: ehttp.Response{
-			Description: "failed operation",
-			Model:       &ErrorMessage{},
-		},
-	},
-}
-
-var DocPostBook = &ehttp.APIDocCommon{
-	Summary:     "new a book",
-	Produces:      []string{ehttp.Application_Json},
+var DocCommonDemo = &ehttp.APIDocCommon{
+	// 选填， 该接口的标签，仅用于api文档的分类显示
+	Tags: []string{"demo"},
+	// 选填，该接口的简述
+	Summary: "a demo api summary",
+	// 选填： api可以产生的MIME类型列表
+	Produces: []string{ehttp.Application_Json},
+	// 选填: api可以消费的MIME类型列表, (注意，1.如果method 是 GET,Consumes不可填)
 	Consumes: []string{ehttp.Application_Json},
+	// 选填: http 请求中的参数列表, 参数的类型支持：int, int32, int64, uint, uint32, uint64, bool, string, float32, float64, file(只有InFormData时,file类型才被允许，其他情况不允许类型为file)
 	Parameters: map[string]ehttp.Parameter{
-		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
+		// 参数名称是id，参数出现在http请求的 url路径中，类型是string， 描述是"the id"
+		"id": ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id"}},
+		// 参数名称是user-type，参数出现在http请求的header中，类型是string， 枚举类型有: admirn 和 normal, 该参数是必填的， 描述是"user type"
+		"user-type": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Enum: "admin normal", Required: true, Desc: "user type"}},
+		// 参数名是limit, 参数出现在http请求的， 类型是int32, 最小值是0, 最大值是1000, 该参数是必填的
+		"limit": ehttp.Parameter{InQuery: &ehttp.ValueInfo{Type: "int32", Min: "0", Max: "100", Required: true}},
+		// 参数名是file1, 参数出现在http请求的， 类型是file, 最小值是0, 最大值是1000, 该参数是选填的
+		// "file1": ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "file", Desc: "the file to upload"}},
 	},
+	// 随请求一起发送的Model (注意，1.如果method 是 GET,Request不可填；2.如果Parameters存在InFormData的参数，Request也不可填)
 	Request: &ehttp.Request{
-		Description: "the book info",
-		Model:       &Book{},
+		Description: "the demo info",
+		Model:       &Demo{},
 	},
+	// http 响应列表
 	Responses: map[int]ehttp.Response{
+		// StatusCode 是 200 时
 		200: ehttp.Response{
+			// 该响应的描述
 			Description: "successful operation",
-			Model:       &Book{},
+			//随响应一起发送的Model
+			Model: &Demo{},
 		},
+		// StatusCode 是 400 时
 		400: ehttp.Response{
+			// 该响应的描述
 			Description: "failed operation",
-			Model:       &ErrorMessage{},
+			//随响应一起发送的Model
+			Model: &ErrorMessage{},
+			//随响应一起发送的标头列表。
+			Headers: map[string]ehttp.ValueInfo{
+				"xxx": ehttp.ValueInfo{Type: "string"},
+			},
 		},
 	},
 }
