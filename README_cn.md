@@ -1,12 +1,17 @@
 # ehttp Web Framework 
 
+[English Introduction](README.md)
+
+## 目录
+
 - [ehttp Web Framework](#ehttp-web-framework)
-    - [中文说明 [English Introduction](README.md)](#中文说明-english-introductionreadmemd)
+    - [目录](#目录)
+    - [简介](#简介)
     - [快速入门](#快速入门)
     - [使用说明](#使用说明)
-        - [Module](#module)
-            - [Module demo](#module-demo)
-            - [Module 的字段](#module-的字段)
+        - [Model](#model)
+            - [Model demo](#model-demo)
+            - [Model 的字段](#model-的字段)
                 - [字段名](#字段名)
                 - [字段类型](#字段类型)
                 - [字段标签（json,xml,enum,max,min,desc）](#字段标签jsonxmlenummaxmindesc)
@@ -19,13 +24,14 @@
         - [Config](#config)
             - [Config Demo](#config-demo)
     - [API Demo](#api-demo)
+        - [POST,PUT,PATCH,DELETE](#postputpatchdelete)
         - [GET](#get)
             - [GET - JSON](#get---json)
             - [GET - XML](#get---xml)
             - [GET - JSON And XML](#get---json-and-xml)
             - [GET - download file](#get---download-file)
 
-## 中文说明 [English Introduction](README.md)
+## 简介
 
 ehttp实现了一个HTTP RESTful API框架。  
 它使Web API设计变得简单，并通过代码反射，自动生成OpenAPI（以前称为Swagger）文档。  
@@ -38,9 +44,7 @@ ehttp 有一下特性:
 >3. 通过代码的反射，自动生成生成OpenAPI（以前称为Swagger）文档. (基于 Go Package reflect).
 >4. 自动检查 APIs 文档的格式, 并清楚地显示错误出现的位置.
 >5. 自定检查http请求的参数.
->6. 支持插件扩展功能。.
-
-
+>6. 支持插件扩展功能.
 
 ## 快速入门
 
@@ -135,12 +139,12 @@ $ go run main.go
 
 ## 使用说明
 
-### Module
+### Model
 
-一个Module其实就是golang的一个struct (也是自动生成文档的依据)
-先看一个Module的例子 (Module book)
+一个Model其实就是golang的一个struct (也是自动生成文档的依据)
+先看一个Model的例子 (Model book)
 
-#### Module demo
+#### Model demo
 
 ```golang
 type BookImageUrls struct {
@@ -162,7 +166,7 @@ type Book struct {
 
 ```
 
-#### Module 的字段
+#### Model 的字段
 
 一个字段由三部分组成： [字段名] [字段的类型] [字段的标签]
 例如 
@@ -172,7 +176,7 @@ type Book struct {
 	Images    BookImageUrls `json:"images" desc:"书的图片"`
 }
 ```
-Module Book 有两个字段，分别是： ID 和 Images. 
+Model Book 有两个字段，分别是： ID 和 Images. 
 字段`ID`的类型是`string`，标签是：`json:"id" desc:"书的id"`
 字段`Images`的类型是`BookImageUrls`,标签是:`json:"images" desc:"书的图片"`
 
@@ -270,13 +274,13 @@ ValueInfo.Type支持以下类型:`int, int32, int64, uint, uint32, uint64, bool,
 
 ```golang
 
-// Module ErrorMessage
+// Model ErrorMessage
 type ErrorMessage struct {
 	Message string `json:"message" desc:"the error message"`
 	Details string `json:"detail" desc:"the error detail"`
 }
 
-// Module Demo
+// Model Demo
 type Demo struct {
 	ID    string `json:"id" desc:"the id"`
 	Title string `json:"title" desc:"the title"`
@@ -360,6 +364,103 @@ conf := &ehttp.Config{
 ```
 
 ## API Demo
+
+### POST,PUT,PATCH,DELETE
+
+```golang
+package main
+
+import (
+	"encoding/json"
+	"io/ioutil"
+
+	"github.com/enjoy-web/ehttp"
+	"github.com/gin-gonic/gin"
+)
+
+type ErrorMessage struct {
+	Message string
+}
+
+type XXXReq struct {
+	ID string
+}
+
+type XXXRsp struct {
+	ID   string
+	Name string
+}
+
+var doc = &ehttp.APIDocCommon{
+	Summary:  "doc summary",
+	Produces: []string{ehttp.Application_Json},
+	Consumes: []string{ehttp.Application_Json},
+	Parameters: map[string]ehttp.Parameter{
+		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
+	},
+	Request: &ehttp.Request{
+		Description: "request model",
+		Model:       &XXXReq{},
+	},
+	Responses: map[int]ehttp.Response{
+		200: ehttp.Response{
+			Description: "successful operation",
+			Model:       &XXXRsp{},
+		},
+		400: ehttp.Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+func handler(c *gin.Context, err error) {
+	if err != nil {
+		c.JSON(400, &ErrorMessage{err.Error()})
+		return
+	}
+	body, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(400, &ErrorMessage{err.Error()})
+		return
+	}
+	XXXReq := &XXXReq{}
+	err = json.Unmarshal(body, XXXReq)
+	if err != nil {
+		c.JSON(400, &ErrorMessage{err.Error()})
+		return
+	}
+	c.JSON(200, XXXReq)
+}
+
+func main() {
+	conf := &ehttp.Config{
+		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
+		BasePath:           "/demo",
+		Version:            "v1",
+		Title:              "Demo APIS",
+		Description:        "Demo APIs descrition",
+		AllowOrigin:        true,
+		OpenAPIDocumentURL: true,
+	}
+	router := ehttp.NewEngine(conf)
+
+	if err := router.POST("/XXX", doc, handler); err != nil {
+		panic(err)
+	}
+	if err := router.PUT("/XXX", doc, handler); err != nil {
+		panic(err)
+	}
+	if err := router.PATCH("/XXX", doc, handler); err != nil {
+		panic(err)
+	}
+	if err := router.DELETE("/XXX", doc, handler); err != nil {
+		panic(err)
+	}
+
+	router.Run(":8000")
+}
+```
 
 ### GET
 
@@ -676,4 +777,5 @@ func main() {
 	router.Run(":8000")
 }
 ```
+
 

@@ -102,6 +102,17 @@ func (doc APIDocCommon) ToSwaggerOperation() (*swagger.Operation, error) {
 func (doc APIDocCommon) ToSwaggerDefinitions() (map[string]*swagger.Schema, error) {
 	creater := StructDocCreater{}
 	structDocs := map[string]*StructDoc{}
+	// Request
+	if doc.Request != nil && doc.Request.Model != nil {
+		_structDocs, err := creater.GetStructDocMap(doc.Request.Model)
+		if err != nil {
+			return nil, err
+		}
+		for k, v := range _structDocs {
+			structDocs[k] = v
+		}
+	}
+	// range Responses
 	for _, response := range doc.Responses {
 		if response.Model != nil {
 			_structDocs, err := creater.GetStructDocMap(response.Model)

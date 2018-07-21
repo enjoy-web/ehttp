@@ -67,6 +67,7 @@ func newImage() ([]byte, error) {
 func main() {
 	conf := &ehttp.Config{
 		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
+		BasePath:           "/demo",
 		Version:            "v1",
 		Title:              "book store APIS",
 		Description:        "APIs of book",

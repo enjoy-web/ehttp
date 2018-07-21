@@ -15,10 +15,10 @@ const DefalutAPIDocumentUrl = "/docs/swagger.json"
 // Engine is the framework's instance, it contains the configuration settings and *gin.Engine.
 // Create an instance of Engine, by using NewEngine(*rest.config)
 type Engine struct {
-	Conf      *Config
-	ginEngine *gin.Engine
-	Swagger   *swagger.Swagger
-	origins   map[string]*corsInfos
+	Conf          *Config
+	ginEngine     *gin.Engine
+	Swagger       *swagger.Swagger
+	pathCorsInfos map[string]*corsInfos
 }
 
 // NewEngine new an Engine from the config
@@ -240,9 +240,6 @@ func (e *Engine) handle(method string, relativePath string, doc APIDoc, handlers
 		if err := e.setAllownOrigin(method, path, doc); err != nil {
 			return err
 		}
-		if err := e.setAllownOrigin(OPTIONS, path, doc); err != nil {
-			return err
-		}
 	}
 
 	// new handle function
@@ -254,7 +251,7 @@ func (e *Engine) handle(method string, relativePath string, doc APIDoc, handlers
 	// log
 	if gin.IsDebugging() {
 		handlerName := nameOfFunction(handlers[0])
-		log.Printf("[RESTDebug] %-6s %-25s --> %s \n", method, e.getBasePath()+path, handlerName)
+		log.Printf("[ehttp-dbg] %-6s %-25s --> %s \n", method, e.getBasePath()+path, handlerName)
 	}
 
 	// router
@@ -307,31 +304,47 @@ func (e *Engine) getAccessControlAllow(method string, path string) *accessContro
 	return cors.toAccessControlAllow()
 }
 
-func (e *Engine) origin(path string) *corsInfos {
-	if e.origins == nil {
-		e.origins = make(map[string]*corsInfos, 0)
+func (e *Engine) corsInfos(path string) *corsInfos {
+	if e.pathCorsInfos == nil {
+		e.pathCorsInfos = make(map[string]*corsInfos, 0)
 	}
-	if _, ok := e.origins[path]; !ok {
-		e.origins[path] = &corsInfos{}
+	if _, ok := e.pathCorsInfos[path]; !ok {
+		e.pathCorsInfos[path] = &corsInfos{}
 	}
-	return e.origins[path]
+	return e.pathCorsInfos[path]
 }
 
 func (e *Engine) setAllownOrigin(method, path string, doc APIDoc) error {
-	headers := getHeadersFormAPIDoc(doc)
+	// get cur method corsInfo
 	cors, err := e.getOriginByMethodAndPath(method, path)
 	if err != nil {
 		return err
 	}
+	// get OPTIONS corsInfo
+	corsOPTIONS, err := e.getOriginByMethodAndPath(OPTIONS, path)
+	if err != nil {
+		return err
+	}
+
+	// add method
+	cors.addMethod(method)
+	corsOPTIONS.addMethod(method)
+
+	// add headers
+	headers := getHeadersFormAPIDoc(doc)
 	for _, header := range headers {
 		cors.addHeader(header)
+		corsOPTIONS.addHeader(header)
 	}
-	cors.addMethod(method)
+
+	// add origin
 	if len(e.Conf.Origins) == 0 {
 		cors.addOrigin("*")
+		corsOPTIONS.addOrigin("*")
 	}
 	for _, orgin := range e.Conf.Origins {
 		cors.addOrigin(orgin)
+		corsOPTIONS.addOrigin(orgin)
 	}
 	return nil
 }
@@ -339,17 +352,17 @@ func (e *Engine) setAllownOrigin(method, path string, doc APIDoc) error {
 func (e *Engine) getOriginByMethodAndPath(method string, path string) (*corsInfo, error) {
 	switch method {
 	case GET:
-		return e.origin(path).GET(), nil
+		return e.corsInfos(path).GET(), nil
 	case POST:
-		return e.origin(path).POST(), nil
+		return e.corsInfos(path).POST(), nil
 	case PUT:
-		return e.origin(path).PUT(), nil
+		return e.corsInfos(path).PUT(), nil
 	case PATCH:
-		return e.origin(path).PATCH(), nil
+		return e.corsInfos(path).PATCH(), nil
 	case DELETE:
-		return e.origin(path).DELETE(), nil
+		return e.corsInfos(path).DELETE(), nil
 	case OPTIONS:
-		return e.origin(path).OPTIONS(), nil
+		return e.corsInfos(path).OPTIONS(), nil
 	default:
 		return nil, errors.New("method " + method + " is not supported")
 	}
@@ -375,7 +388,7 @@ func (e *Engine) router(method, path string, handler func(*gin.Context)) error {
 }
 
 func (e *Engine) allowOrigin() {
-	for path, cors := range e.origins {
+	for path, cors := range e.pathCorsInfos {
 		accessControlAllow := cors.OPTIONS().toAccessControlAllow()
 		e.GinEngine().OPTIONS(e.getBasePath()+path, func(c *gin.Context) {
 			if accessControlAllow != nil {
@@ -403,7 +416,8 @@ func (e *Engine) openAPIDocumentURL() {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 		swagger := *e.Swagger
-		c.JSON(200, swagger)
+		swagger.Host = c.Request.Host
+		c.JSON(200, &swagger)
 	})
 	if allowOrigin {
 		e.GinEngine().OPTIONS(docURL, func(c *gin.Context) {

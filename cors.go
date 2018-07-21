@@ -84,7 +84,7 @@ func (c *corsInfo) addOrigin(origin string) {
 	c.Origins[origin] = true
 }
 
-func (c corsInfo) toAccessControlAllow() *accessControlAllow {
+func (c *corsInfo) toAccessControlAllow() *accessControlAllow {
 	access := &accessControlAllow{Credentials: c.Credentials}
 	access.setMethods(c.Methods)
 	access.setHeaders(c.Headers)
@@ -112,9 +112,6 @@ type accessControlAllow struct {
 // to let a web application running at one origin (domain) have permission to access selected resources
 // from a server at a different origin.
 func (a *accessControlAllow) cors(c *gin.Context) error {
-	c.Writer.Header().Set("Access-Control-Allow-Methods", a.Methods)
-	c.Writer.Header().Set("Access-Control-Allow-Headers", a.Headers)
-
 	if _, ok := a.Origins["*"]; ok {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	} else {
@@ -129,6 +126,8 @@ func (a *accessControlAllow) cors(c *gin.Context) error {
 		}
 	}
 
+	c.Writer.Header().Set("Access-Control-Allow-Methods", a.Methods)
+	c.Writer.Header().Set("Access-Control-Allow-Headers", a.Headers)
 	if a.Credentials {
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 	}
