@@ -10,9 +10,9 @@ import (
 )
 
 var DocPostBook = &ehttp.APIDocCommon{
-	Summary:     "new a book",
-	Accept:      []string{ehttp.Application_Json},
-	ContentType: []string{ehttp.Application_Json},
+	Summary:  "new a book",
+	Produces: []string{ehttp.Application_Json},
+	Consumes: []string{ehttp.Application_Json},
 	Parameters: map[string]ehttp.Parameter{
 		"version": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
 	},

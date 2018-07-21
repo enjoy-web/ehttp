@@ -11,8 +11,8 @@ import (
 )
 
 var DocGETBooks = &ehttp.APIDocMethodGET{
-	Summary: "Get book info by id",
-	Accept:  []string{ehttp.Application_Json},
+	Summary:  "Get book info by id",
+	Produces: []string{ehttp.Application_Json},
 	Parameters: map[string]ehttp.Parameter{
 		"version":   ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Desc: "the version of api"}},
 		"limit":     ehttp.Parameter{InQuery: &ehttp.ValueInfo{Type: "int64", Min: "0", Max: "1000", Required: true, Desc: "the limit of searching"}},
