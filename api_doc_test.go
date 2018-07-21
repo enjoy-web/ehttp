@@ -23,7 +23,7 @@ type book struct {
 	HasReview bool          `json:"has_review"`
 }
 
-var docGETBook = &APIDocMethodGET{
+var docGETBook = &APIDocCommon{
 	Summary:  "Get book info by id",
 	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
@@ -42,13 +42,36 @@ var docGETBook = &APIDocMethodGET{
 	},
 }
 
-var invalidDocGETBook = &APIDocMethodGET{
+var invalidDocGETBook = &APIDocCommon{
 	Summary:  "Get book info by id",
 	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
 		"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
 		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
 		"range":   Parameter{InFormData: &ValueInfo{Type: "string"}}, // err:  FormData is not supported in method GET
+	},
+	Responses: map[int]Response{
+		200: Response{
+			Description: "successful operation",
+			Model:       &Book{},
+		},
+		400: Response{
+			Description: "failed operation",
+			Model:       &ErrorMessage{},
+		},
+	},
+}
+
+var invalidDocGETBook2 = &APIDocCommon{
+	Summary:  "Get book info by id",
+	Produces: []string{Application_Json},
+	Parameters: map[string]Parameter{
+		"id":      Parameter{InPath: &ValueInfo{Type: "string"}},
+		"version": Parameter{InHeader: &ValueInfo{Type: "string", Desc: "the version of api"}},
+	},
+	Request: &Request{ // err: in method GET, Request should be nil
+		Description: "the book info",
+		Model:       &Book{},
 	},
 	Responses: map[int]Response{
 		200: Response{
@@ -134,28 +157,32 @@ var invalidDocPostBook2 = &APIDocCommon{
 	},
 }
 
-func TestAPIDocMethodGET_ToSwaggerOperation(t *testing.T) {
+func TestAPIDocCommon_ToSwaggerOperation(t *testing.T) {
+	// get
+	docGETBook.SetMethod(GET)
 	if _, err := docGETBook.ToSwaggerOperation(); err != nil {
 		testError(t, err)
 	}
-
+	invalidDocGETBook.SetMethod(GET)
 	if _, err := invalidDocGETBook.ToSwaggerOperation(); err != nil {
 		testLog(t, err)
 	} else {
 		testError(t, "invalidDocGETBook.ToSwaggerOperation() err should not be nil")
 	}
-}
-
-func TestAPIDocMethodGET_ToSwaggerDefinitions(t *testing.T) {
-	if _, err := docGETBook.ToSwaggerDefinitions(); err != nil {
-		testError(t, err)
+	invalidDocGETBook2.SetMethod(GET)
+	if _, err := invalidDocGETBook2.ToSwaggerOperation(); err != nil {
+		testLog(t, err)
+	} else {
+		testError(t, "invalidDocGETBook2.ToSwaggerOperation() err should not be nil")
 	}
-}
-func TestAPIDocCommon_ToSwaggerOperation(t *testing.T) {
+
+	// post
+	docPostBook.SetMethod(POST)
 	if _, err := docPostBook.ToSwaggerOperation(); err != nil {
 		testError(t, err)
 	}
 
+	invalidDocPostBook.SetMethod(POST)
 	if _, err := invalidDocPostBook.ToSwaggerOperation(); err != nil {
 		testLog(t, err)
 	} else {
@@ -170,6 +197,10 @@ func TestAPIDocCommon_ToSwaggerOperation(t *testing.T) {
 }
 
 func TestAPIDocCommon_ToSwaggerDefinitions(t *testing.T) {
+	if _, err := docGETBook.ToSwaggerDefinitions(); err != nil {
+		testError(t, err)
+	}
+
 	if _, err := docPostBook.ToSwaggerDefinitions(); err != nil {
 		testError(t, err)
 	}

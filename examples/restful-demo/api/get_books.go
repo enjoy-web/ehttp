@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var DocGETBooks = &ehttp.APIDocMethodGET{
+var DocGETBooks = &ehttp.APIDocCommon{
 	Summary:  "Get book info by id",
 	Produces: []string{ehttp.Application_Json},
 	Parameters: map[string]ehttp.Parameter{

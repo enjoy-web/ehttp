@@ -38,7 +38,7 @@ type Book struct {
 	Title string `json:"title" desc:"the book title"`
 }
 
-var DocGETBook = &ehttp.APIDocMethodGET{
+var DocGETBook = &ehttp.APIDocCommon{
 	Summary: "Get book info by id",
 	Produces:  []string{ehttp.Application_Json},
 	Parameters: map[string]ehttp.Parameter{

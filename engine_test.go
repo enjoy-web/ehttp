@@ -84,7 +84,7 @@ func getInt64InQuery(c *gin.Context, name string) (int64, error) {
 	return strconv.ParseInt(str, 10, 64)
 }
 
-var DocGETBook = &APIDocMethodGET{
+var DocGETBook = &APIDocCommon{
 	Summary:  "Get book info by id",
 	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
@@ -168,7 +168,7 @@ func HandlePostBook(c *gin.Context, err error) {
 	c.JSON(200, book)
 }
 
-var DocDELETEBook = &APIDocMethodGET{
+var DocDELETEBook = &APIDocCommon{
 	Summary:  "delete book info by id",
 	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
@@ -210,7 +210,7 @@ func HandleDELETEBook(c *gin.Context, err error) {
 	c.JSON(200, book)
 }
 
-var DocGETBooks = &APIDocMethodGET{
+var DocGETBooks = &APIDocCommon{
 	Summary:  "Get book info by id",
 	Produces: []string{Application_Json},
 	Parameters: map[string]Parameter{
@@ -551,7 +551,7 @@ func TestInvalidDoc(t *testing.T) {
 
 func missParamterInDoc(t *testing.T) {
 	router := NewEngine(conf)
-	err := router.GET("/books/:id", &APIDocMethodGET{
+	err := router.GET("/books/:id", &APIDocCommon{
 		Summary:  "Get book info by id",
 		Produces: []string{Application_Json},
 		Responses: map[int]Response{
@@ -574,7 +574,7 @@ func missParamterInDoc(t *testing.T) {
 
 func missHandlerFunc(t *testing.T) {
 	router := NewEngine(conf)
-	err := router.GET("/books/:id", &APIDocMethodGET{
+	err := router.GET("/books/:id", &APIDocCommon{
 		Summary:  "Get book info by id",
 		Produces: []string{Application_Json},
 		Parameters: map[string]Parameter{

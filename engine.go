@@ -222,6 +222,11 @@ func (e *Engine) handle(method string, relativePath string, doc APIDoc, handlers
 		return &engineError{relativePath, GET, errors.New("miss HandlerFunc")}
 	}
 
+	// set method
+	if doc != nil {
+		doc.SetMethod(method)
+	}
+
 	// set swagger paths
 	if doc != nil {
 		if err := e.setSwaggerPath(relativePath, method, doc); err != nil {

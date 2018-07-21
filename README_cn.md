@@ -54,7 +54,7 @@ type Book struct {
 	Title string `json:"title" desc:"书的标题"`
 }
 
-var DocGETBook = &ehttp.APIDocMethodGET{
+var DocGETBook = &ehttp.APIDocCommon{
 	Summary: "根据id获取书的信息",
 	Produces:  []string{ehttp.Application_Json},
 	Parameters: map[string]ehttp.Parameter{
