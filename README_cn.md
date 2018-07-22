@@ -876,7 +876,7 @@ func main() {
 
 ```go
 	router := ehttp.NewEngine(conf)
-	// APIDoc 为nil即可
+	// APIDoc as nil
 	err := router.POST("/XXX", nil, handler)
 ```
 
@@ -884,6 +884,6 @@ func main() {
 
 ````go
 	router := ehttp.NewEngine(conf)
-	// 返回了gin的对象,来自于 gin.Defalut()
+	// GinEngine() Will return gin.Defalut()
 	ginRouter := router.GinEngine()
 ````
