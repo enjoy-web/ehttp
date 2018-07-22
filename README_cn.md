@@ -22,6 +22,7 @@ ehttp 有一下特性:
 
 - [ehttp Web Framework](#ehttp-web-framework)
     - [目录](#目录)
+    - [安装](#安装)
     - [快速入门](#快速入门)
     - [使用说明](#使用说明)
         - [Model](#model)
@@ -45,6 +46,24 @@ ehttp 有一下特性:
             - [GET - XML](#get---xml)
             - [GET - JSON And XML](#get---json-and-xml)
             - [GET - download file](#get---download-file)
+
+## 安装
+
+要安装ehttp package ，您需要先安装Go并设置Go workspace。
+
+1. 下载和安装:
+
+```sh
+$ go get -u github.com/gin-gonic/gin
+$ gp get -u github.com/enjoy-web/ehttp
+```
+
+2. 在代码中 Import:
+
+```go
+import "github.com/gin-gonic/gin"
+import "github.com/enjoy-web/ehttp"
+```
 
 ## 快速入门
 

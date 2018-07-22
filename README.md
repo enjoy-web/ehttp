@@ -16,14 +16,15 @@ ehttp has the following features:
 >4. Auto-Check APIs document format, and display the location of the error clearly.
 >5. Check parameters Automatically when receiving an http request.
 >6. Plug-ins to be extended features.
->7. View APIs documentation, and debug APIs on webpage.
->8. Generating server stubs and client SDKs.
+>7. View APIs documentation, and debug APIs on webpage. (How to use -- [Quick Start](#quick-start))
+>8. Generating server stubs and client SDKs. (How to use -- [Quick Start](#quick-start))
 
 ## Catalogue  
 
 - [ehttp Web Framework](#ehttp-web-framework)
     - [Catalogue](#catalogue)
-    - [Quick Start demo](#quick-start-demo)
+    - [Installation](#installation)
+    - [Quick Start](#quick-start)
     - [Introduction](#introduction)
         - [Model](#model)
             - [Model demo](#model-demo)
@@ -47,7 +48,25 @@ ehttp has the following features:
             - [GET - JSON And XML](#get---json-and-xml)
             - [GET - download file](#get---download-file)
 
-## Quick Start demo
+## Installation
+
+To install Gin package, you need to install Go and set your Go workspace first.
+
+1. Download and install it:
+
+```sh
+$ go get -u github.com/gin-gonic/gin
+$ gp get -u github.com/enjoy-web/ehttp
+```
+
+2. Import it in your code:
+
+```go
+import "github.com/gin-gonic/gin"
+import "github.com/enjoy-web/ehttp"
+```
+
+## Quick Start
 
 Demo: main.go
 ```golang
