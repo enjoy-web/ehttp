@@ -2,6 +2,22 @@
 
 [English Introduction](README.md)
 
+ehttp实现了一个HTTP RESTful API框架。  
+它使Web API设计变得简单，并通过代码反射，自动生成OpenAPI（以前称为Swagger）文档。  
+该框架基于 gin (https://github.com/gin-gonic/gin) 和 swagger (https://swagger.io/).   
+
+ehttp 有一下特性:
+
+>1. 保持了gin的优点(优秀的性能和可用性).
+>2. 让Web API设计变得简单.
+>3. 通过代码的反射，自动生成生成OpenAPI（以前称为Swagger）文档. (基于 Go Package reflect).
+>4. 自动检查 APIs 文档的格式, 并清楚地显示错误出现的位置.
+>5. 自定检查http请求的参数.
+>6. 支持插件扩展功能.
+>7. 支持在Web页码查看API文档，对接口进行调式.（ 如何使用，请查看 [快速入门](#快速入门)）
+>8. 支持生成不同语言的SDK客户端代码 或 服务端代码.（ 如何使用，请查看 [快速入门](#快速入门)）
+
+
 ## 目录
 
 - [ehttp Web Framework](#ehttp-web-framework)
@@ -31,20 +47,6 @@
             - [GET - JSON And XML](#get---json-and-xml)
             - [GET - download file](#get---download-file)
 
-## 简介
-
-ehttp实现了一个HTTP RESTful API框架。  
-它使Web API设计变得简单，并通过代码反射，自动生成OpenAPI（以前称为Swagger）文档。  
-该框架基于 gin (https://github.com/gin-gonic/gin) 和 swagger (https://swagger.io/).   
-
-ehttp 有一下特性:
-
->1. 保持了gin的优点(优秀的性能和可用性).
->2. 让Web API设计变得简单.
->3. 通过代码的反射，自动生成生成OpenAPI（以前称为Swagger）文档. (基于 Go Package reflect).
->4. 自动检查 APIs 文档的格式, 并清楚地显示错误出现的位置.
->5. 自定检查http请求的参数.
->6. 支持插件扩展功能.
 
 ## 快速入门
 
@@ -102,7 +104,7 @@ func HandleGETBook(c *gin.Context, err error) {
 func main() {
 	conf := &ehttp.Config{
 		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
-		BasePath:           "/book_store",
+		BasePath:           "/demo",
 		Version:            "v1",
 		Title:              "book store APIs 文档",
 		Description:        "书相关的API",
@@ -125,16 +127,16 @@ func main() {
 $ go run main.go 
 ```
 
-自动生成的 OpenAPI(swagger)文档地址是： http://127.0.0.1:8000/dev/docs/swagger.json
+自动生成的 OpenAPI(swagger)文档地址是： http://127.0.0.1:8000/demo/docs/swagger.json
 
 如果需要在Web UI 查看API文档， 和对接口进行调试：  
 >1. 打开网页： [http://petstore.swagger.io ](http://petstore.swagger.io) (Swagger UI Live demo)， 
->2. 输入 http://127.0.0.1:8000/dev/docs/swagger.json 到输入框中，点击“Explore”按钮.
+>2. 输入 http://127.0.0.1:8000/demo/docs/swagger.json 到输入框中，点击“Explore”按钮.
 >3. 然后就可看到美观的可视化的API文档， 并且可以在网页中对API进行调试。
 
 如果需要生成不同语言的SDk客户端：
 >1. 打开网页： [http://editor.swagger.io/](http://editor.swagger.io) (Swagger Edit)
->2. 选择菜单 File->Import url, 输入 http://127.0.0.1:8000/dev/docs/swagger.json到输入框中，点击确定.
+>2. 选择菜单 File->Import url, 输入 http://127.0.0.1:8000/demo/docs/swagger.json 到输入框中，点击确定.
 >3. 在菜单 Generate Client 选择需要的编程语言的客户端。
 
 ## 使用说明
@@ -250,15 +252,17 @@ APIDoc是有意义的，在接收到http请求时，会根据APIDoc的参数规�
 ```golang
 ehttp.APIDocCommon{
 	Parameters: map[string]ehttp.Parameter{
-		// 参数名称是id，参数出现在http请求的 url路径中，类型是string， 描述是"the id"
+		// 参数名称是id，参数出现在http请求的 Path 中，类型是string， 描述是"the id"
+		// 例如: 在 /items/{id}, 参数id出现在 http请求的Path中
 		"id": ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id"}},
 		// 参数名称是user-type，参数出现在http请求的header中，类型是string， 枚举类型有: admirn 和 normal, 该参数是必填的， 描述是"user type"
 		"user-type": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Enum: "admin normal", Required: true, Desc: "user type"}},
-		// 参数名是limit, 参数出现在http请求的， 类型是int32, 最小值是0, 最大值是1000, 该参数是必填的
+		// 参数名是limit, 参数出现在http请求的Query中， 类型是int32, 最小值是0, 最大值是1000, 该参数是必填的
+		// 例如： 在 /items?limit=###, 参数limit 出现在http请求的Query中
 		"limit": ehttp.Parameter{InQuery: &ehttp.ValueInfo{Type: "int32", Min: "0", Max: "100", Required: true}},
-		// 参数名是data, 参数出现在http请求的， 类型是string
+		// 参数名是data, 参数出现在http请求的FormData中， 类型是string
 		"data":  ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "string"},
-		// 参数名是file1, 参数出现在http请求的， 类型是file, 最小值是0, 最大值是1000, 该参数是选填的
+		// 参数名是file1, 参数出现在http请求的formData中， 类型是file, 最小值是0, 最大值是1000, 该参数是选填的
 	    "file1": ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "file", Desc: "the file to upload"}},
 	},
 }
@@ -297,14 +301,18 @@ var DocCommonDemo = &ehttp.APIDocCommon{
 	Consumes: []string{ehttp.Application_Json},
 	// 选填: http 请求中的参数列表, 参数的类型支持：int, int32, int64, uint, uint32, uint64, bool, string, float32, float64, file(只有InFormData时,file类型才被允许，其他情况不允许类型为file)
 	Parameters: map[string]ehttp.Parameter{
-		// 参数名称是id，参数出现在http请求的 url路径中，类型是string， 描述是"the id"
+		// 参数名称是id，参数出现在http请求的 Path 中，类型是string， 描述是"the id"
+		// 例如: 在 /items/{id}, 参数id出现在 http请求的Path中
 		"id": ehttp.Parameter{InPath: &ehttp.ValueInfo{Type: "string", Desc: "the id"}},
 		// 参数名称是user-type，参数出现在http请求的header中，类型是string， 枚举类型有: admirn 和 normal, 该参数是必填的， 描述是"user type"
 		"user-type": ehttp.Parameter{InHeader: &ehttp.ValueInfo{Type: "string", Enum: "admin normal", Required: true, Desc: "user type"}},
-		// 参数名是limit, 参数出现在http请求的， 类型是int32, 最小值是0, 最大值是1000, 该参数是必填的
+		// 参数名是limit, 参数出现在http请求的Query中， 类型是int32, 最小值是0, 最大值是1000, 该参数是必填的
+		// 例如： 在 /items?limit=###, 参数limit 出现在http请求的Query中
 		"limit": ehttp.Parameter{InQuery: &ehttp.ValueInfo{Type: "int32", Min: "0", Max: "100", Required: true}},
-		// 参数名是file1, 参数出现在http请求的， 类型是file, 最小值是0, 最大值是1000, 该参数是选填的
-		// "file1": ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "file", Desc: "the file to upload"}},
+		// 参数名是data, 参数出现在http请求的FormData中， 类型是string
+		// "data":  ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "string"},
+		// 参数名是file1, 参数出现在http请求的formData中， 类型是file, 最小值是0, 最大值是1000, 该参数是选填的
+	    // "file1": ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "file", Desc: "the file to upload"}},
 	},
 	// 随请求一起发送的Model (注意，1.如果method 是 GET,Request不可填；2.如果Parameters存在InFormData的参数，Request也不可填)
 	Request: &ehttp.Request{
