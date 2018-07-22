@@ -48,6 +48,9 @@ ehttp 有一下特性:
             - [GET - XML](#get---xml)
             - [GET - JSON And XML](#get---json-and-xml)
             - [GET - download file](#get---download-file)
+        - [其他](#其他)
+            - [有时候不想让API出现在文档中](#有时候不想让api出现在文档中)
+            - [有时候想在gin框架中完成其它想要的功能](#有时候想在gin框架中完成其它想要的功能)
 
 ## 安装
 
@@ -57,7 +60,7 @@ ehttp 有一下特性:
 
 ```sh
 $ go get -u github.com/gin-gonic/gin
-$ gp get -u github.com/enjoy-web/ehttp
+$ go get -u github.com/enjoy-web/ehttp
 ```
 
 2. 在代码中 Import:
@@ -393,6 +396,65 @@ conf := &ehttp.Config{
 ```
 
 ## API Demo
+
+### Upload files
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/enjoy-web/ehttp"
+	"github.com/gin-gonic/gin"
+)
+
+var doc = &ehttp.APIDocCommon{
+	Summary:  "doc summary",
+	Produces: []string{ehttp.Application_Json},
+	Consumes: []string{ehttp.Application_Json},
+	Parameters: map[string]ehttp.Parameter{
+		"file": ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "file", Desc: "the file to upload"}},
+	},
+	Responses: map[int]ehttp.Response{
+		200: ehttp.Response{
+			Description: "successful operation",
+		},
+		400: ehttp.Response{
+			Description: "failed operation",
+		},
+	},
+}
+
+func handler(c *gin.Context, err error) {
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+	file, _ := c.FormFile("file")
+	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+}
+
+func main() {
+	conf := &ehttp.Config{
+		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
+		BasePath:           "/demo",
+		Version:            "v1",
+		Title:              "Demo APIS",
+		Description:        "Demo APIs descrition",
+		AllowOrigin:        true,
+		OpenAPIDocumentURL: true,
+	}
+	router := ehttp.NewEngine(conf)
+
+	if err := router.POST("/files", doc, handler); err != nil {
+		panic(err)
+	}
+
+	router.Run(":8000")
+}
+```
 
 ### POST,PUT,PATCH,DELETE
 
@@ -808,4 +870,20 @@ func main() {
 }
 ```
 
+## 其他
 
+### 有时候不想让API出现在文档中
+
+```go
+	router := ehttp.NewEngine(conf)
+	// APIDoc 为nil即可
+	err := router.POST("/XXX", nil, handler)
+```
+
+### 有时候想在gin框架中完成其它想要的功能
+
+````go
+	router := ehttp.NewEngine(conf)
+	// 返回了gin的对象,来自于 gin.Defalut()
+	ginRouter := router.GinEngine()
+````

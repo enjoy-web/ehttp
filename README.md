@@ -49,6 +49,9 @@ ehttp has the following features:
             - [GET - XML](#get---xml)
             - [GET - JSON And XML](#get---json-and-xml)
             - [GET - download file](#get---download-file)
+    - [Others](#others)
+        - [Sometimes I don't want the API to appear in the document.](#sometimes-i-dont-want-the-api-to-appear-in-the-document)
+        - [Sometimes using the gin framework.](#sometimes-using-the-gin-framework)
 
 ## Installation
 
@@ -58,7 +61,7 @@ To install Gin package, you need to install Go and set your Go workspace first.
 
 ```sh
 $ go get -u github.com/gin-gonic/gin
-$ gp get -u github.com/enjoy-web/ehttp
+$ go get -u github.com/enjoy-web/ehttp
 ```
 
 2. Import it in your code:
@@ -414,6 +417,65 @@ conf := &ehttp.Config{
 ```
 
 ## API Demo
+
+### Upload files
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/enjoy-web/ehttp"
+	"github.com/gin-gonic/gin"
+)
+
+var doc = &ehttp.APIDocCommon{
+	Summary:  "doc summary",
+	Produces: []string{ehttp.Application_Json},
+	Consumes: []string{ehttp.Application_Json},
+	Parameters: map[string]ehttp.Parameter{
+		"file": ehttp.Parameter{InFormData: &ehttp.ValueInfo{Type: "file", Desc: "the file to upload"}},
+	},
+	Responses: map[int]ehttp.Response{
+		200: ehttp.Response{
+			Description: "successful operation",
+		},
+		400: ehttp.Response{
+			Description: "failed operation",
+		},
+	},
+}
+
+func handler(c *gin.Context, err error) {
+	if err != nil {
+		c.String(400, err.Error())
+		return
+	}
+	file, _ := c.FormFile("file")
+	c.String(http.StatusOK, fmt.Sprintf("'%s' uploaded!", file.Filename))
+}
+
+func main() {
+	conf := &ehttp.Config{
+		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
+		BasePath:           "/demo",
+		Version:            "v1",
+		Title:              "Demo APIS",
+		Description:        "Demo APIs descrition",
+		AllowOrigin:        true,
+		OpenAPIDocumentURL: true,
+	}
+	router := ehttp.NewEngine(conf)
+
+	if err := router.POST("/files", doc, handler); err != nil {
+		panic(err)
+	}
+
+	router.Run(":8000")
+}
+```
 
 ### POST,PUT,PATCH,DELETE
 
@@ -828,3 +890,21 @@ func main() {
 	router.Run(":8000")
 }
 ```
+
+## Others
+
+### Sometimes I don't want the API to appear in the document.
+
+```go
+	router := ehttp.NewEngine(conf)
+	// APIDoc as nil
+	err := router.POST("/XXX", nil, handler)
+```
+
+### Sometimes using the gin framework.
+
+````go
+	router := ehttp.NewEngine(conf)
+	// GinEngine() Will return gin.Defalut()
+	ginRouter := router.GinEngine()
+````
