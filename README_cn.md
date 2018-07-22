@@ -6,6 +6,8 @@ ehttp实现了一个HTTP RESTful API框架。
 它使Web API设计变得简单，并通过代码反射，自动生成OpenAPI（以前称为Swagger）文档。  
 该框架基于 gin (https://github.com/gin-gonic/gin) 和 swagger (https://swagger.io/).   
 
+https://godoc.org/github.com/enjoy-web/ehttp
+
 ehttp 有一下特性:
 
 >1. 保持了gin的优点(优秀的性能和可用性).
