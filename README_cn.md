@@ -14,7 +14,7 @@ ehttp 有一下特性:
 >4. 自动检查 APIs 文档的格式, 并清楚地显示错误出现的位置.
 >5. 自定检查http请求的参数.
 >6. 支持插件扩展功能.
->7. 支持在Web页码查看API文档，对接口进行调式.（ 如何使用，请查看 [快速入门](#快速入门)）
+>7. 支持在Web页面查看API文档，对接口进行调式.（ 如何使用，请查看 [快速入门](#快速入门)）
 >8. 支持生成不同语言的SDK客户端代码 或 服务端代码.（ 如何使用，请查看 [快速入门](#快速入门)）
 
 
@@ -22,7 +22,6 @@ ehttp 有一下特性:
 
 - [ehttp Web Framework](#ehttp-web-framework)
     - [目录](#目录)
-    - [简介](#简介)
     - [快速入门](#快速入门)
     - [使用说明](#使用说明)
         - [Model](#model)
@@ -36,7 +35,7 @@ ehttp 有一下特性:
                     - [字段标签-最小值（min）、最大值（max）](#字段标签-最小值min最大值max)
         - [APIDoc](#apidoc)
             - [APIDoc参数demo](#apidoc参数demo)
-            - [APIDocDemo(完整的APIDoc Demo)](#apidocdemo完整的apidoc-demo)
+            - [APIDoc Demo](#apidoc-demo)
         - [Config](#config)
             - [Config Demo](#config-demo)
     - [API Demo](#api-demo)
@@ -46,7 +45,6 @@ ehttp 有一下特性:
             - [GET - XML](#get---xml)
             - [GET - JSON And XML](#get---json-and-xml)
             - [GET - download file](#get---download-file)
-
 
 ## 快速入门
 
@@ -194,7 +192,7 @@ Model Book 有两个字段，分别是： ID 和 Images.
   *int, *int32, *int64, *uint, *uint32, *uint64, *bool, *string,  *float32, *float64,
   []int, []int32, []int64, []uint, []uint32, []uint64, []bool, []string,  []float32, []float64,
   []*int, []*int32, []*int64, []*uint, []*uint32, []*uint64, []*bool, []*string,  []*float32, []*float64,
-  // 在上面的例子中， BookImageUrls 就是一个 struct , 是模型
+  // 在上面的例子中， BookImageUrls 就是一个 struct , 是模型, (不支持匿名函数)
   struct, []struct, []*struct 
 ```
 ##### 字段标签（json,xml,enum,max,min,desc）
@@ -274,8 +272,9 @@ ValueInfo.Type支持以下类型:`int, int32, int64, uint, uint32, uint64, bool,
 注意： 在非InFormData的情况下，ValueInfo.Type不允许设置为`file `
 
 
-#### APIDocDemo(完整的APIDoc Demo)
+####  APIDoc Demo
 
+用一个APIDoc来描述一个API
 ```golang
 
 // Model ErrorMessage
@@ -291,15 +290,16 @@ type Demo struct {
 }
 
 var DocCommonDemo = &ehttp.APIDocCommon{
-	// 选填， 该接口的标签，仅用于api文档的分类显示
+	// 选填， 该API的标签，仅用于api文档的分类显示
 	Tags: []string{"demo"},
-	// 选填，该接口的简述
+	// 选填，该API的简述
 	Summary: "a demo api summary",
-	// 选填： api可以产生的MIME类型列表
+	// 选填： 该API可以产生的MIME类型列表
 	Produces: []string{ehttp.Application_Json},
-	// 选填: api可以消费的MIME类型列表, (注意，1.如果method 是 GET,Consumes不可填)
+	// 选填: 该API可以消费的MIME类型列表, (注意，如果method 是 GET,Consumes不可填)
 	Consumes: []string{ehttp.Application_Json},
-	// 选填: http 请求中的参数列表, 参数的类型支持：int, int32, int64, uint, uint32, uint64, bool, string, float32, float64, file(只有InFormData时,file类型才被允许，其他情况不允许类型为file)
+	// 选填: http 请求中的参数列表, 参数的类型支持：int, int32, int64, uint, uint32, uint64, bool, string, float32, float64, file
+	// (只有InFormData时,file类型才被允许，其他情况不允许类型为file)
 	Parameters: map[string]ehttp.Parameter{
 		// 参数名称是id，参数出现在http请求的 Path 中，类型是string， 描述是"the id"
 		// 例如: 在 /items/{id}, 参数id出现在 http请求的Path中
@@ -354,11 +354,11 @@ conf := &ehttp.Config{
 	Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP, ehttp.SchemeHTTPS},
 	// 选填，API的基本路径， 必须斜杠(/)开头，BasePath不支持路径模板。
 	BasePath:           "/dev",
-	// 必填: 版本号： 目前仅用于文档显示
+	// 必填: 版本号（目前在框架中，仅用于文档显示，未用于逻辑）
 	Version:            "v1",
-	// 必填: API的标题
+	// 必填: APIs文档的标题
 	Title:              "Demo APIS",
-	// 必填: API描述信息
+	// 必填: APIs文档的描述信息
 	Description:        "Demo APIS Description",
 	// 选填： 是否允许跨域操作 (swagger UI 需要跨域))
 	AllowOrigin:        true,
@@ -526,7 +526,7 @@ func HandleGETBook(c *gin.Context, err error) {
 func main() {
 	conf := &ehttp.Config{
 		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
-		BasePath:           "/book_store",
+		BasePath:           "/demo",
 		Version:            "v1",
 		Title:              "book store APIS",
 		Description:        "APIs of book",
@@ -598,7 +598,7 @@ func HandleGETBook(c *gin.Context, err error) {
 func main() {
 	conf := &ehttp.Config{
 		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
-		BasePath:           "/book_store",
+		BasePath:           "/demo",
 		Version:            "v1",
 		Title:              "book store APIS",
 		Description:        "APIs of book",
@@ -680,7 +680,7 @@ func HandleGETBook(c *gin.Context, err error) {
 func main() {
 	conf := &ehttp.Config{
 		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
-		BasePath:           "/book_store",
+		BasePath:           "/demo",
 		Version:            "v1",
 		Title:              "book store APIS",
 		Description:        "APIs of book",
@@ -769,6 +769,7 @@ func newImage() ([]byte, error) {
 func main() {
 	conf := &ehttp.Config{
 		Schemes:            []ehttp.Scheme{ehttp.SchemeHTTP},
+		BasePath:           "/demo",
 		Version:            "v1",
 		Title:              "book store APIS",
 		Description:        "APIs of book",
