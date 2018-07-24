@@ -42,15 +42,16 @@ ehttp 有一下特性:
         - [Config](#config)
             - [Config Demo](#config-demo)
     - [API Demo](#api-demo)
+        - [Upload files](#upload-files)
         - [POST,PUT,PATCH,DELETE](#postputpatchdelete)
         - [GET](#get)
             - [GET - JSON](#get---json)
             - [GET - XML](#get---xml)
             - [GET - JSON And XML](#get---json-and-xml)
             - [GET - download file](#get---download-file)
-        - [其他](#其他)
-            - [有时候不想让API出现在文档中](#有时候不想让api出现在文档中)
-            - [有时候想在gin框架中完成其它想要的功能](#有时候想在gin框架中完成其它想要的功能)
+    - [其他](#其他)
+        - [有时候不想让API出现在文档中](#有时候不想让api出现在文档中)
+        - [有时候想在gin框架中完成其它想要的功能](#有时候想在gin框架中完成其它想要的功能)
 
 ## 安装
 

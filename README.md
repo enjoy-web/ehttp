@@ -43,6 +43,7 @@ ehttp has the following features:
         - [Config](#config)
             - [Config Demo](#config-demo)
     - [API Demo](#api-demo)
+        - [Upload files](#upload-files)
         - [POST,PUT,PATCH,DELETE](#postputpatchdelete)
         - [GET](#get)
             - [GET - JSON](#get---json)
