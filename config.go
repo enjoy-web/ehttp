@@ -21,4 +21,6 @@ type Config struct {
 	Origins            []string
 	OpenAPIDocumentURL bool
 	APIDocumentURL     string
+	YAMLAPIDocumentURL string
+	DomainName         string
 }

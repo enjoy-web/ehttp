@@ -56,6 +56,21 @@ var dataTypes = map[string]dataType{
 	"file":    dataType{"file", ""},
 }
 
+var valueTypeByteSizes = map[string]int{
+	"int":     32,
+	"int32":   32,
+	"int64":   64,
+	"uint":    32,
+	"uint32":  32,
+	"uint64":  64,
+	"float32": 32,
+	"float64": 64,
+}
+
+func getValueTypeByteSize(valueTypes string) int {
+	return valueTypeByteSizes[valueTypes]
+}
+
 func isValueTypeString(valueType string) bool {
 	return valueType == "string"
 }
@@ -86,6 +101,10 @@ func isValueTypeNumber(valueType string) bool {
 		return true
 	}
 	return false
+}
+
+func isValueTypeBool(valueType string) bool {
+	return valueType == "bool"
 }
 
 // StructDoc document of a struct
@@ -121,6 +140,10 @@ type StructField struct {
 	Enum          []interface{}
 	Min           *float64
 	Max           *float64
+	MinLen        *int64
+	MaxLen        *int64
+	Required      bool
+	Default       interface{}
 }
 
 // StructDocCreater is a creator specifically responsible for getting documents from objects
@@ -313,14 +336,56 @@ func getStructField(field reflect.StructField) (*StructField, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := invalidKeyCheck(field); err != nil {
+		return nil, err
+	}
+	min, err := getStructFieldMinimum(field)
+	if err != nil {
+		return nil, err
+	}
+	max, err := getStructFieldMaximum(field)
+	if err != nil {
+		return nil, err
+	}
+	minLen, err := getStructFieldMinLen(field)
+	if err != nil {
+		return nil, err
+	}
+	maxLen, err := getStructFieldMaxLen(field)
+	if err != nil {
+		return nil, err
+	}
+	required, err := getStructFieldRequired(field)
+	if err != nil {
+		return nil, err
+	}
+	defaultValue, err := getStructFieldDefalutValue(field)
+	if err != nil {
+		return nil, err
+	}
+
+	isArrary := checkStructFieldTypeIsSlice(field)
+	isStruct := checkStructFieldTypeIsStruct(field)
+	desc := getStructFieldDescription(field)
+
+	if isArrary || isStruct {
+		if err := checkTagsIfIsArrayOrStruct(field); err != nil {
+			return nil, err
+		}
+	}
+
 	structField := &StructField{
-		IsArray:     checkStructFieldTypeIsSlice(field),
-		IsStruct:    checkStructFieldTypeIsStruct(field),
+		IsArray:     isArrary,
+		IsStruct:    isStruct,
 		Name:        fieldName,
-		Description: getStructFieldDescription(field),
+		Description: desc,
 		Enum:        enum,
-		Min:         getStructFieldMinimum(field),
-		Max:         getStructFieldMaximum(field),
+		Min:         min,
+		Max:         max,
+		MinLen:      minLen,
+		MaxLen:      maxLen,
+		Required:    required,
+		Default:     defaultValue,
 	}
 	if structField.IsStruct {
 		structUUID, err := getStructUUIDFromStructField(field)
@@ -358,9 +423,19 @@ func getStructFieldEnum(field reflect.StructField) ([]interface{}, error) {
 		}
 	}
 
-	if isValueTypeInt(valueType) || isValueTypeUint(valueType) {
+	if isValueTypeInt(valueType) {
 		for _, enumStr := range enumStrList {
-			num, err := strconv.ParseInt(enumStr, 10, 64)
+			num, err := strconv.ParseInt(enumStr, 10, getValueTypeByteSize(valueType))
+			if err != nil {
+				return nil, err
+			}
+			enum = append(enum, num)
+		}
+	}
+
+	if isValueTypeUint(valueType) {
+		for _, enumStr := range enumStrList {
+			num, err := strconv.ParseInt(enumStr, 10, getValueTypeByteSize(valueType))
 			if err != nil {
 				return nil, err
 			}
@@ -370,40 +445,160 @@ func getStructFieldEnum(field reflect.StructField) ([]interface{}, error) {
 	return enum, nil
 }
 
+func invalidKeyCheck(field reflect.StructField) error {
+	invalidKeys := []string{
+		"defalut",
+		"minLen",
+		"maxLen",
+		"josn",
+		"xlm",
+		"jos",
+		"jso",
+	}
+	for _, invalidKey := range invalidKeys {
+		_, ok := field.Tag.Lookup(invalidKey)
+		if ok {
+			err := errors.New("invalid tag name " + invalidKey)
+			log.Println("warnnig: ", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func getStructFieldDefalutValue(field reflect.StructField) (interface{}, error) {
+	valueType, ok := valueTypes[field.Type.Kind()]
+	if !ok {
+		return nil, nil
+	}
+
+	str, ok := field.Tag.Lookup("default")
+	if !ok {
+		return nil, nil
+	}
+	if isValueTypeString(valueType) {
+		defaultValue := str
+		return &defaultValue, nil
+	}
+	if isValueTypeInt(valueType) {
+		defaultValue, err := strconv.ParseInt(str, 10, getValueTypeByteSize(valueType))
+		if err != nil {
+			return nil, err
+		}
+		return &defaultValue, nil
+	}
+	if isValueTypeFloat(valueType) {
+		defaultValue, err := strconv.ParseFloat(str, getValueTypeByteSize(valueType))
+		if err != nil {
+			return nil, err
+		}
+		return &defaultValue, nil
+	}
+	if isValueTypeUint(valueType) {
+		defaultValue, err := strconv.ParseUint(str, 10, getValueTypeByteSize(valueType))
+		if err != nil {
+			return nil, err
+		}
+		return &defaultValue, nil
+	}
+	if isValueTypeBool(valueType) {
+		defaultValue, err := strconv.ParseBool(str)
+		if err != nil {
+			return nil, err
+		}
+		return &defaultValue, nil
+	}
+	return nil, nil
+}
+
 func checkStructFieldEnum(enumStr string, valueType string) error {
 	return checkEnumFormat(enumStr, valueType)
 }
 
-func getStructFieldMinimum(field reflect.StructField) *float64 {
+func getStructFieldMinimum(field reflect.StructField) (*float64, error) {
 	return _getStructFieldFloat64ByTag(field, "min")
 }
 
-func getStructFieldMaximum(field reflect.StructField) *float64 {
+func getStructFieldMaximum(field reflect.StructField) (*float64, error) {
 	return _getStructFieldFloat64ByTag(field, "max")
 }
 
-func _getStructFieldFloat64ByTag(field reflect.StructField, tag string) *float64 {
+func getStructFieldMinLen(field reflect.StructField) (*int64, error) {
+	return _getStructFieldInt64ByTag(field, "minlen")
+}
+
+func getStructFieldMaxLen(field reflect.StructField) (*int64, error) {
+	return _getStructFieldInt64ByTag(field, "maxlen")
+}
+
+func getStructFieldRequired(field reflect.StructField) (bool, error) {
+	return _getStructFieldBoolByTag(field, "req")
+}
+
+func _getStructFieldFloat64ByTag(field reflect.StructField, tag string) (*float64, error) {
 	valueType, ok := valueTypes[field.Type.Kind()]
 	if !ok {
-		return nil
+		return nil, nil
 	}
 	if isValueTypeNumber(valueType) {
 		minStr, ok := field.Tag.Lookup(tag)
 		if ok {
 			minNum, err := strconv.ParseFloat(minStr, 64)
 			if err != nil {
-				log.Println("warnnig: ", err)
-				return nil
+				return nil, err
 			}
-			return &minNum
+			return &minNum, nil
 		}
+		return nil, nil
 	}
-	return nil
+	return nil, nil
+}
+
+func _getStructFieldBoolByTag(field reflect.StructField, tag string) (bool, error) {
+	str, ok := field.Tag.Lookup(tag)
+	if ok {
+		result, err := strconv.ParseBool(str)
+		if err != nil {
+			return false, err
+		}
+		return result, nil
+	}
+	return false, nil
+}
+
+func _getStructFieldInt64ByTag(field reflect.StructField, tag string) (*int64, error) {
+	valueType, ok := valueTypes[field.Type.Kind()]
+	if !ok {
+		return nil, nil
+	}
+	if isValueTypeString(valueType) {
+		numStr, ok := field.Tag.Lookup(tag)
+		if ok {
+			num, err := strconv.ParseInt(numStr, 10, 64)
+			if err != nil {
+				return nil, err
+			}
+			return &num, nil
+		}
+		return nil, nil
+	}
+	return nil, nil
 }
 
 // get Description in the struct field(like: Id string, description=""; ID string `desc:"session ID", description="session ID"`)
 func getStructFieldDescription(field reflect.StructField) string {
 	return field.Tag.Get("desc")
+}
+
+func checkTagsIfIsArrayOrStruct(field reflect.StructField) error {
+	tags := []string{"enum", "min", "max", "default", "minlen", "maxlen"}
+	for _, tag := range tags {
+		_, ok := field.Tag.Lookup(tag)
+		if ok {
+			return errors.New("array or struct cann't set " + tag + " tag")
+		}
+	}
+	return nil
 }
 
 // get struct UUID from struct field

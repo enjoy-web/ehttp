@@ -119,6 +119,19 @@ func newSwaggerParameter(name, in string, valueInfo *ValueInfo) (*swagger.Parame
 	if len(enum) == 0 {
 		enum = nil
 	}
+	minLen, err := valueInfo.getMinLen()
+	if err != nil {
+		return nil, err
+	}
+	maxLen, err := valueInfo.getMaxLen()
+	if err != nil {
+		return nil, err
+	}
+	defaultValue, err := valueInfo.getDefalut()
+	if err != nil {
+		return nil, err
+	}
+
 	return &swagger.Parameter{
 		Name:        name,
 		In:          in,
@@ -129,6 +142,9 @@ func newSwaggerParameter(name, in string, valueInfo *ValueInfo) (*swagger.Parame
 		Minimum:     min,
 		Maximum:     max,
 		Enum:        enum,
+		MinLength:   minLen,
+		MaxLength:   maxLen,
+		Default:     defaultValue,
 	}, nil
 }
 
@@ -155,6 +171,10 @@ func getDefinitionsFromStructDocMap(docMap map[string]*StructDoc) map[string]*sw
 					Enum:        field.Enum,
 					Minimum:     field.Min,
 					Maximum:     field.Max,
+					Required:    field.Required,
+					MinLength:   field.MinLen,
+					MaxLength:   field.MaxLen,
+					Default:     field.Default,
 				}
 			}
 			if field.IsArray {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"strings"
 
 	"github.com/enjoy-web/ehttp/swagger"
 	"github.com/ghodss/yaml"
@@ -11,14 +12,16 @@ import (
 )
 
 const DefalutAPIDocumentUrl = "/docs/swagger.json"
+const DefalutYAMLAPIDocumentUrl = "/docs/swagger.yaml"
 
 // Engine is the framework's instance, it contains the configuration settings and *gin.Engine.
 // Create an instance of Engine, by using NewEngine(*rest.config)
 type Engine struct {
-	Conf          *Config
-	ginEngine     *gin.Engine
-	Swagger       *swagger.Swagger
-	pathCorsInfos map[string]*corsInfos
+	Conf             *Config
+	ginEngine        *gin.Engine
+	Swagger          *swagger.Swagger
+	pathCorsInfos    map[string]*corsInfos
+	globalParameters map[string]Parameter
 }
 
 // NewEngine new an Engine from the config
@@ -152,9 +155,14 @@ func (e *Engine) setSwaggerPath(relativePath string, method string, doc APIDoc) 
 	}
 	e.setSwaggerOperation(relativePath, method, operation)
 
+	parameters, err := e.getParamters(operation.Parameters)
+	if err != nil {
+		return &engineError{relativePath, method, err}
+	}
+
 	// check paramter in relativePath
-	if err := checkParametersInPath(relativePath, operation.Parameters); err != nil {
-		return err
+	if err := checkParametersInPath(relativePath, parameters); err != nil {
+		return &engineError{relativePath, method, err}
 	}
 
 	// set swagger Definitions
@@ -165,6 +173,30 @@ func (e *Engine) setSwaggerPath(relativePath string, method string, doc APIDoc) 
 	e.setSwaggerDefinitions(definitions)
 	return nil
 }
+
+func (e *Engine) getParamters(srcParameters []*swagger.Parameter) ([]*swagger.Parameter, error) {
+	parameters := []*swagger.Parameter{}
+	for _, parameter := range srcParameters {
+		if parameter.Ref == "" {
+			parameters = append(parameters, parameter)
+			continue
+		}
+		if strings.HasPrefix(parameter.Ref, "#/parameters/") {
+			name := parameter.Ref[len("#/parameters/"):]
+			p, ok := e.globalParameters[name]
+			if !ok {
+				return nil, errors.New("not found " + parameter.Ref)
+			}
+			parameter, err := p.ToSwaggerParameters(name)
+			if err != nil {
+				return nil, err
+			}
+			parameters = append(parameters, parameter[0])
+		}
+	}
+	return parameters, nil
+}
+
 func (e *Engine) setSwaggerDefinitions(definitions map[string]*swagger.Schema) {
 	for k, v := range definitions {
 		// init swagger Definitions
@@ -402,25 +434,62 @@ func (e *Engine) allowOrigin() {
 	}
 }
 
-func (e *Engine) openAPIDocumentURL() {
+func (e *Engine) getAPIDocumentURL() string {
 	docURL := e.Conf.APIDocumentURL
 	if docURL == "" {
 		docURL = DefalutAPIDocumentUrl
 	}
 	docURL = e.getBasePath() + docURL
+	return docURL
+}
+
+func (e *Engine) getYAMLAPIDocumentURL() string {
+	docURL := e.Conf.YAMLAPIDocumentURL
+	if docURL == "" {
+		docURL = DefalutYAMLAPIDocumentUrl
+	}
+	docURL = e.getBasePath() + docURL
+	return docURL
+}
+
+func (e *Engine) openAPIDocumentURL() {
 	allowOrigin := e.Conf.AllowOrigin
-	e.GinEngine().GET(docURL, func(c *gin.Context) {
+	e.GinEngine().GET(e.getAPIDocumentURL(), func(c *gin.Context) {
 		if allowOrigin {
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,OPTIONS")
 			c.Writer.Header().Set("Access-Control-Allow-Headers", "Access-Control-Allow-Origin,Access-Control-Allow-Method,Content-Type")
 			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		}
 		swagger := *e.Swagger
-		swagger.Host = c.Request.Host
-		c.JSON(200, &swagger)
+		if e.Conf.DomainName == "" {
+			swagger.Host = c.Request.Host
+		} else {
+			swagger.Host = e.Conf.DomainName
+		}
+		c.IndentedJSON(200, &swagger)
+	})
+	e.GinEngine().GET(e.getYAMLAPIDocumentURL(), func(c *gin.Context) {
+		if allowOrigin {
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Access-Control-Allow-Origin,Access-Control-Allow-Method,Content-Type")
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+		swagger := *e.Swagger
+		if e.Conf.DomainName == "" {
+			swagger.Host = c.Request.Host
+		} else {
+			swagger.Host = e.Conf.DomainName
+		}
+		c.YAML(200, &swagger)
 	})
 	if allowOrigin {
-		e.GinEngine().OPTIONS(docURL, func(c *gin.Context) {
+		e.GinEngine().OPTIONS(e.getAPIDocumentURL(), func(c *gin.Context) {
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Access-Control-Allow-Origin,Access-Control-Allow-Method,Content-Type")
+			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+			c.JSON(200, gin.H{})
+		})
+		e.GinEngine().OPTIONS(e.getYAMLAPIDocumentURL(), func(c *gin.Context) {
 			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET,OPTIONS")
 			c.Writer.Header().Set("Access-Control-Allow-Headers", "Access-Control-Allow-Origin,Access-Control-Allow-Method,Content-Type")
 			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -431,4 +500,22 @@ func (e *Engine) openAPIDocumentURL() {
 
 func (e *Engine) getBasePath() string {
 	return e.Conf.BasePath
+}
+
+func (e *Engine) SetGlobalParameters(parameters map[string]Parameter) error {
+	e.globalParameters = parameters
+	if len(parameters) > 0 {
+		e.Swagger.Parameters = map[string]*swagger.Parameter{}
+	}
+	for name, paramter := range parameters {
+		p, err := paramter.ToSwaggerParameters(name)
+		if err != nil {
+			return err
+		}
+		if len(p) != 1 {
+			return errors.New("Invalid Global Parameter " + name)
+		}
+		e.Swagger.Parameters[name] = p[0]
+	}
+	return nil
 }

@@ -3,6 +3,7 @@ package ehttp
 import (
 	"errors"
 	"fmt"
+	"sort"
 
 	"github.com/enjoy-web/ehttp/swagger"
 )
@@ -30,15 +31,16 @@ type APIDoc interface {
 //   Request -- the request in http body.
 //   Responses -- An object to hold responses that can be used across operations
 type APIDocCommon struct {
-	Tags        []string
-	Summary     string
-	Description string
-	Produces    []string
-	Consumes    []string
-	Parameters  map[string]Parameter
-	Request     *Request
-	Responses   map[int]Response
-	method      string
+	Tags                 []string
+	Summary              string
+	Description          string
+	Produces             []string
+	Consumes             []string
+	GlobalParameterNames []string
+	Parameters           map[string]Parameter
+	Request              *Request
+	Responses            map[int]Response
+	method               string
 }
 
 func (doc *APIDocCommon) SetMethod(method string) {
@@ -68,13 +70,20 @@ func (doc APIDocCommon) ToSwaggerOperation() (*swagger.Operation, error) {
 		operation.Parameters = []*swagger.Parameter{}
 	}
 	// set parameters
-	for name, parameter := range doc.Parameters {
-		parameters, err := parameter.ToSwaggerParameters(name)
+	names := doc.getParamterNamesSortByName()
+	for _, name := range doc.GlobalParameterNames {
+		operation.Parameters = append(operation.Parameters, &swagger.Parameter{
+			Ref: "#/parameters/" + name,
+		})
+	}
+	for _, name := range names {
+		parameters, err := doc.Parameters[name].ToSwaggerParameters(name)
 		if err != nil {
 			return nil, &parameterError{name, err}
 		}
 		operation.Parameters = append(operation.Parameters, parameters...)
 	}
+
 	if doc.Request != nil {
 		param, err := doc.Request.toSwaggerParameter()
 		if err != nil {
@@ -159,4 +168,13 @@ func (doc APIDocCommon) hasformData() bool {
 		}
 	}
 	return false
+}
+
+func (doc APIDocCommon) getParamterNamesSortByName() []string {
+	names := []string{}
+	for name := range doc.Parameters {
+		names = append(names, name)
+	}
+	sort.Sort(sort.StringSlice(names))
+	return names
 }

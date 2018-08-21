@@ -24,6 +24,9 @@ type ValueInfo struct {
 	Min      string
 	Max      string
 	Desc     string
+	MinLen   string
+	MaxLen   string
+	Default  string
 	Required bool
 }
 
@@ -173,6 +176,28 @@ func (v ValueInfo) isUint() bool {
 	return true
 }
 
+func (v ValueInfo) getMinLen() (*int64, error) {
+	if v.MinLen == "" {
+		return nil, nil
+	}
+	num, err := strconv.ParseInt(v.MinLen, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return &num, nil
+}
+
+func (v ValueInfo) getMaxLen() (*int64, error) {
+	if v.MaxLen == "" {
+		return nil, nil
+	}
+	num, err := strconv.ParseInt(v.MaxLen, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	return &num, nil
+}
+
 func (v ValueInfo) getEnum() ([]interface{}, error) {
 	enum := []interface{}{}
 	if v.Enum == "" {
@@ -258,6 +283,18 @@ func (v ValueInfo) toSwaggerHeader() (*swagger.Header, error) {
 	if len(enum) == 0 {
 		enum = nil
 	}
+	minLen, err := v.getMinLen()
+	if err != nil {
+		return nil, err
+	}
+	maxLen, err := v.getMaxLen()
+	if err != nil {
+		return nil, err
+	}
+	defalutValue, err := v.getDefalut()
+	if err != nil {
+		return nil, err
+	}
 	return &swagger.Header{
 		Description: v.Desc,
 		Type:        dataType.typeName,
@@ -265,7 +302,49 @@ func (v ValueInfo) toSwaggerHeader() (*swagger.Header, error) {
 		Minimum:     min,
 		Maximum:     max,
 		Enum:        enum,
+		MinLength:   minLen,
+		MaxLength:   maxLen,
+		Default:     defalutValue,
 	}, nil
+}
+
+func (v ValueInfo) getDefalut() (interface{}, error) {
+	if v.Default == "" {
+		return nil, nil
+	}
+	if v.isBool() {
+		defaultValue, err := strconv.ParseBool(v.Default)
+		if err != nil {
+			return nil, err
+		}
+		return &defaultValue, nil
+	}
+	if v.isFloat() {
+		defaultValue, err := strconv.ParseFloat(v.Default, v.getBitSize())
+		if err != nil {
+			return nil, err
+		}
+		return &defaultValue, nil
+	}
+	if v.isInt() {
+		defaultValue, err := strconv.ParseInt(v.Default, 10, v.getBitSize())
+		if err != nil {
+			return nil, err
+		}
+		return &defaultValue, nil
+	}
+	if v.isString() {
+		defaultValue := v.Default
+		return &defaultValue, nil
+	}
+	if v.isUint() {
+		defaultValue, err := strconv.ParseUint(v.Default, 10, v.getBitSize())
+		if err != nil {
+			return nil, err
+		}
+		return &defaultValue, nil
+	}
+	return nil, nil
 }
 
 func (v ValueInfo) getBitSize() int {

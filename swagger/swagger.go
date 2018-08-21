@@ -9,6 +9,7 @@ type Swagger struct {
 	Schemes             []string              `json:"schemes,omitempty" yaml:"schemes,omitempty"`
 	Consumes            []string              `json:"consumes,omitempty" yaml:"consumes,omitempty"`
 	Produces            []string              `json:"produces,omitempty" yaml:"produces,omitempty"`
+	Parameters          map[string]*Parameter `json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	Paths               map[string]*Item      `json:"paths" yaml:"paths"`
 	Definitions         map[string]*Schema    `json:"definitions,omitempty" yaml:"definitions,omitempty"`
 	SecurityDefinitions map[string]*Security  `json:"securityDefinitions,omitempty" yaml:"securityDefinitions,omitempty"`
@@ -91,6 +92,9 @@ type Parameter struct {
 	Default     interface{}   `json:"default,omitempty" yaml:"default,omitempty"`
 	Minimum     *float64      `json:"minimum,omitempty" yaml:"minimum,omitempty"`
 	Maximum     *float64      `json:"maximum,omitempty" yaml:"maximum,omitempty"`
+	MinLength   *int64        `json:"minLength,omitempty" yaml:"minLength,omitempty"`
+	MaxLength   *int64        `json:"maxLength,omitempty" yaml:"maxLength,omitempty"`
+	Ref         string        `json:"$ref,omitempty" yaml:"$ref,omitempty"`
 }
 
 // Schema The Schema Object allows the definition of input and output data types.
@@ -102,7 +106,7 @@ type Schema struct {
 	Title       string                `json:"title,omitempty" yaml:"title,omitempty"`
 	Format      string                `json:"format,omitempty" yaml:"format,omitempty"`
 	Description string                `json:"description,omitempty" yaml:"description,omitempty"`
-	Required    []string              `json:"required,omitempty" yaml:"required,omitempty"`
+	Required    bool                  `json:"required,omitempty" yaml:"required,omitempty"`
 	Type        string                `json:"type,omitempty" yaml:"type,omitempty"`
 	Items       *Schema               `json:"items,omitempty" yaml:"items,omitempty"`
 	Properties  map[string]*Propertie `json:"properties,omitempty" yaml:"properties,omitempty"`
@@ -118,7 +122,7 @@ type Propertie struct {
 	Default              interface{}           `json:"default,omitempty" yaml:"default,omitempty"`
 	Type                 string                `json:"type,omitempty" yaml:"type,omitempty"`
 	Example              string                `json:"example,omitempty" yaml:"example,omitempty"`
-	Required             []string              `json:"required,omitempty" yaml:"required,omitempty"`
+	Required             bool                  `json:"required,omitempty" yaml:"required,omitempty"`
 	Format               string                `json:"format,omitempty" yaml:"format,omitempty"`
 	ReadOnly             bool                  `json:"readOnly,omitempty" yaml:"readOnly,omitempty"`
 	Properties           map[string]*Propertie `json:"properties,omitempty" yaml:"properties,omitempty"`
@@ -127,6 +131,8 @@ type Propertie struct {
 	Enum                 []interface{}         `json:"enum,omitempty" yaml:"enum,omitempty"`
 	Minimum              *float64              `json:"minimum,omitempty" yaml:"minimum,omitempty"`
 	Maximum              *float64              `json:"maximum,omitempty" yaml:"maximum,omitempty"`
+	MinLength            *int64                `json:"minLength,omitempty" yaml:"minLength,omitempty"`
+	MaxLength            *int64                `json:"maxLength,omitempty" yaml:"maxLength,omitempty"`
 }
 
 // Items A limited subset of JSON-Schema's items object. It is used by parameter definitions that are not located in "body".
@@ -156,6 +162,8 @@ type Header struct {
 	Default     interface{}   `json:"default,omitempty" yaml:"default,omitempty"`
 	Minimum     *float64      `json:"minimum,omitempty" yaml:"minimum,omitempty"`
 	Maximum     *float64      `json:"maximum,omitempty" yaml:"maximum,omitempty"`
+	MinLength   *int64        `json:"minLength,omitempty" yaml:"minLength,omitempty"`
+	MaxLength   *int64        `json:"maxLength,omitempty" yaml:"maxLength,omitempty"`
 }
 
 // Security Allows the definition of a security scheme that can be used by the operations
