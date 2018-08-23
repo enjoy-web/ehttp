@@ -167,6 +167,9 @@ func (sc *StructDocCreater) GetStructDocMap(obj interface{}) (map[string]*Struct
 		return nil, err
 	}
 	err = sc.scanStructInStructType(t)
+	if err != nil {
+		return nil, err
+	}
 	return sc.structDocsMap, nil
 }
 
@@ -647,9 +650,6 @@ func checkStructFieldTypeIsStruct(field reflect.StructField) bool {
 
 func getJsonNameFromTag(jsonTag string) string {
 	strs := strings.Split(jsonTag, ",")
-	if len(strs) > 1 {
-		log.Println(jsonTag)
-	}
 	if len(strs) > 0 {
 		return strs[0]
 	}
