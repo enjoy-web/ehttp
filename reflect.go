@@ -585,9 +585,22 @@ func _getStructFieldInt64ByTag(field reflect.StructField, tag string) (*int64, e
 	return nil, nil
 }
 
+func isOmitempty(field reflect.StructField) bool {
+	tag := field.Tag.Get("json")
+	strs := strings.Split(tag, ",")
+	if len(strs) > 1 {
+		return strs[1] == "omitempty"
+	}
+	return false
+}
+
 // get Description in the struct field(like: Id string, description=""; ID string `desc:"session ID", description="session ID"`)
 func getStructFieldDescription(field reflect.StructField) string {
-	return field.Tag.Get("desc")
+	desc := field.Tag.Get("desc")
+	if isOmitempty(field) {
+		desc += " (为空则不输出)"
+	}
+	return desc
 }
 
 func checkTagsIfIsArrayOrStruct(field reflect.StructField) error {
@@ -632,6 +645,24 @@ func checkStructFieldTypeIsStruct(field reflect.StructField) bool {
 	return t.Kind() == reflect.Struct
 }
 
+func getJsonNameFromTag(jsonTag string) string {
+	strs := strings.Split(jsonTag, ",")
+	if len(strs) > 1 {
+		log.Println(jsonTag)
+	}
+	if len(strs) > 0 {
+		return strs[0]
+	}
+	return ""
+}
+func getXmlNameFromTag(xmlTag string) string {
+	strs := strings.Split(xmlTag, ",")
+	if len(strs) > 0 {
+		return strs[0]
+	}
+	return ""
+}
+
 func getStructFieldName(field reflect.StructField) (string, error) {
 	match, err := regexp.MatchString("^[A-Z].*", field.Name)
 	if err != nil {
@@ -641,8 +672,8 @@ func getStructFieldName(field reflect.StructField) (string, error) {
 		return "", errors.New(field.Name + " is not start with uppercase English letters")
 	}
 
-	jsonName := field.Tag.Get("json")
-	xmlName := field.Tag.Get("xml")
+	jsonName := getJsonNameFromTag(field.Tag.Get("json"))
+	xmlName := getXmlNameFromTag(field.Tag.Get("xml"))
 	if jsonName == "" && xmlName == "" {
 		return field.Name, nil
 	}
@@ -795,8 +826,8 @@ func checkStructFieldsJSONNameAndXMLName(structType reflect.Type, structFieldNam
 }
 
 func _checkStructFieldsJSONNameAndXMLName(structType reflect.Type, field reflect.StructField, structFieldNameType *structFiledNameType) error {
-	jsonName := field.Tag.Get("json")
-	xmlName := field.Tag.Get("xml")
+	jsonName := getJsonNameFromTag(field.Tag.Get("json"))
+	xmlName := getXmlNameFromTag(field.Tag.Get("xml"))
 	if jsonName == "" && xmlName == "" {
 		return nil
 	}

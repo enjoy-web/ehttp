@@ -185,7 +185,7 @@ func (e *Engine) getParamters(srcParameters []*swagger.Parameter) ([]*swagger.Pa
 			name := parameter.Ref[len("#/parameters/"):]
 			p, ok := e.globalParameters[name]
 			if !ok {
-				return nil, errors.New("not found " + parameter.Ref)
+				return nil, errors.New("the ref " + parameter.Ref + " is not found")
 			}
 			parameter, err := p.ToSwaggerParameters(name)
 			if err != nil {
