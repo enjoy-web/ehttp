@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const _definitions = "#/definitions/"
@@ -146,6 +147,32 @@ type StructField struct {
 	Default       interface{}
 }
 
+var docChecker = &structDocChecker{}
+
+type structDocChecker struct {
+	lock sync.Mutex
+	m    map[string]*StructDoc
+}
+
+func (s structDocChecker) checkConfliction(docs map[string]*StructDoc) error {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	if s.m == nil {
+		s.m = map[string]*StructDoc{}
+	}
+	for _, doc := range docs {
+		v, ok := s.m[doc.StructName]
+		if ok {
+			if v.UUID != doc.UUID {
+				return errors.New("Conflict between " + v.UUID + " and " + doc.UUID)
+			}
+		} else {
+			s.m[doc.StructName] = doc
+		}
+	}
+	return nil
+}
+
 // StructDocCreater is a creator specifically responsible for getting documents from objects
 type StructDocCreater struct {
 	structDocsMap map[string]*StructDoc
@@ -167,6 +194,10 @@ func (sc *StructDocCreater) GetStructDocMap(obj interface{}) (map[string]*Struct
 		return nil, err
 	}
 	err = sc.scanStructInStructType(t)
+	if err != nil {
+		return nil, err
+	}
+	err = docChecker.checkConfliction(sc.structDocsMap)
 	if err != nil {
 		return nil, err
 	}
