@@ -178,6 +178,7 @@ func getDefinitionsFromStructDocMap(docMap map[string]*StructDoc) map[string]*sw
 				}
 			}
 			if field.IsArray {
+				propertie.Description = ""
 				properties[field.Name] = &swagger.Propertie{
 					Description: field.Description,
 					Type:        "array",

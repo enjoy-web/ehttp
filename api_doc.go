@@ -98,6 +98,9 @@ func (doc APIDocCommon) ToSwaggerOperation() (*swagger.Operation, error) {
 	// set Responses
 	for statusCode, response := range doc.Responses {
 		code := fmt.Sprintf("%d", statusCode)
+		if statusCode == -1 {
+			code = "default"
+		}
 		swaggerResponse, err := response.ToSwaggerResponse()
 		if err != nil {
 			return nil, err
